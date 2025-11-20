@@ -350,6 +350,8 @@ GLOBAL RULES:
         console.log("Hadith API Response:", response);
         const data = response.data;
 
+
+        //  kondisi pertama - berkaitan dengan hadith
         if (data && data.hadiths && data.hadiths.data) {
           let hadithList = data.hadiths.data.map((h, i) =>
             `${i + 1}. ${h.hadithEnglish}\n   - ${h.book.bookName}\n`
@@ -359,17 +361,56 @@ GLOBAL RULES:
             "messages": [
               {
                 "role": "system",
-                "content": `You are a Hadith Summary Generator.
-Your task is to summarize the following hadiths into a concise format for the user.
-`              },
+                "content": `Anda adalah Hadith Formatter yang HANYA memformat data hadits yang sudah ada.
+
+ATURAN KETAT:
+1. DILARANG menambah, mengubah, atau mengarang isi hadits
+2. DILARANG menambah komponen yang tidak ada (tingkatan, nomor, dll)
+3. HANYA pilih hadits yang RELEVAN dengan pertanyaan user
+4. WAJIB gunakan bahasa yang sama dengan pertanyaan user
+5. Format HARUS sesuai template
+
+TEMPLATE FORMAT (per hadits):
+**<h2>Nama Kitab</h2>** - <small>[Status jika ada] - [Nomor jika ada]</small>
+Sumber: [URL ke sunnah.com]
+
+[Isi hadits ASLI tanpa perubahan]
+
+---
+
+CONTOH OUTPUT:
+**Sahih Bukhari** - Shahih - Hadits 25
+Sumber: https://sunnah.com/bukhari/2/25
+
+[Isi hadits dari API]
+
+---
+
+**Sahih Muslim** - Hadits 156
+Sumber: https://sunnah.com/muslim/1/156
+
+[Isi hadits dari API]
+
+INSTRUKSI:
+- Jika hadits tidak relevan dengan pertanyaan, JANGAN tampilkan
+- Jika data kosong (status/nomor), JANGAN tulis "[tidak ada]" atau sejenisnya
+- Berikan pengantar singkat (1 kalimat) yang relevan dengan pertanyaan user
+- Maksimal tampilkan 5 hadits paling relevan
+`
+              },
               {
                 "role": "user",
-                "content": `Here are the hadiths:\n\n${hadithList}\n\nPlease provide a brief summary highlighting the key points of these hadiths for the user. sesuaikan dengan bahasa user yang sebelumnya digunakan. user sebelumnya bertanya ${userQuestion}, jadi buat ringkasan atau ambil hadith yang sesuai dan mudah dipahami berdasarkan pertanyaan user, buat link hadith menuju sumber di SUNNAH.com . JANGAN TAMBAHKAN ATAU UBAH ISI HADITS.`
+                "content": `Pertanyaan user: "${userQuestion}"
+
+Data hadits dari API:
+${hadithList}
+
+Format hadits di atas sesuai template. Pilih HANYA yang relevan dengan pertanyaan user.`
               }
             ],
             "model": "openai/gpt-oss-120b",
-            "temperature": 0.7,
-            "max_completion_tokens": 1000,
+            "temperature": 0.3,
+            "max_completion_tokens": 1500,
             "top_p": 1,
             "stream": false,
             "stop": null
