@@ -374,6 +374,7 @@ Your task is to summarize the following hadiths into a concise format for the us
             "stream": false,
             "stop": null
           });
+          finalResponse = chatSummary.choices[0].message.content;
         } else {
           finalResponse = 'Tidak ditemukan hadits yang sesuai.';
         }
