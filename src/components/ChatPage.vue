@@ -371,6 +371,9 @@ ATURAN KETAT:
 5. Format HARUS sesuai template
 
 TEMPLATE FORMAT (per hadits):
+tampilkan juga informasi penting seperti kitab, status, nomor, dan penulis (jika ada).
+
+
 **<h2>Nama Kitab</h2>** - <small>[Status jika ada] - [Nomor jika ada]</small>
 Sumber: [URL ke sunnah.com]
 
@@ -379,10 +382,10 @@ Sumber: [URL ke sunnah.com]
 ---
 
 CONTOH OUTPUT:
-**Sahih Bukhari** - Shahih - Hadits 25
-Sumber: https://sunnah.com/bukhari/2/25
-
-[Isi hadits dari API]
+<h2>Sahih Muslim - Hadits 156</h2> <small>[status]</small>
+ <a href="https://sunnah.com/muslim/1/156">lihat hadith ✅</a>
+[Isi hadits dari API - text arab]
+[Isi hadits dari API - terjemahkan bahasa sesuai pertanyaan user]
 
 ---
 
