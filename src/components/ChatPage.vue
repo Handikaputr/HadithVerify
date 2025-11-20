@@ -94,7 +94,7 @@
               : isDarkMode
                 ? 'bg-slate-800/80 text-gray-100 rounded-bl-md border border-slate-700/50'
                 : 'bg-white text-gray-800 rounded-bl-md border border-gray-200'">
-              <p class="text-sm leading-relaxed whitespace-pre-wrap">{{ message.text }}</p>
+              <div class="text-sm leading-relaxed whitespace-pre-wrap" v-html="message.text"></div>
             </div>
             <span class="text-[10px] mt-1 px-2"
               :class="[message.sender === 'user' ? 'text-right' : 'text-left', isDarkMode ? 'text-gray-500' : 'text-gray-400']">
@@ -234,84 +234,95 @@ async function sendMessage() {
       "messages": [
         {
           "role": "system",
-          "content": `You are a Hadith Verification Pre-Processor.
-
-Your ONLY job is to analyze the user's message and output EXACTLY ONE valid JSON object.
+          "content": `You are a Hadith Query Analyzer. Output ONLY valid JSON.
 
 =================================================================
-1) INVALID
-Triggered when:
-- Pesan terlalu umum,
-- Tidak ada topik hadis,
-- Tidak ada kata yang bisa dipakai query,
-- Tidak relevan dengan agama / budi pekerti.
-
-FORMAT:
-{
-  "type": "invalid",
-  "message": "mohon memasukkan topik hadis yang benar yaa"
-}
+DETECTION LOGIC
 =================================================================
+1) INVALID - Tidak relevan dengan hadits
+   Trigger: pesan umum, greeting, tidak ada topik hadits
+   Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
 
-2) HADITH_QUERY  
-Triggered when:
-- User meminta "hadis tentang ..."
-- User meminta verifikasi / takhrij
-- User mengirim teks hadis (Arab/English/Indonesia)
-- User menyebut kitab / chapter / nomor
+2) HADITH_QUERY - User mencari hadits
+   Trigger: 
+   - "hadits tentang..." / "hadith about..."
+   - Verifikasi teks hadits (Arab/English/Indonesia)
+   - Menyebut kitab/chapter/nomor eksplisit
+   
+3) DEFAULT - Pertanyaan umum agama
+   Trigger: pertanyaan fiqh, tafsir, sejarah, tidak minta hadits spesifik
+   Output: {"type": "default", "message": "JAWABAN SINGKAT"}
 
-Your task:
-Extract ONLY data that *benar-benar disebut user*  
-atau data supported keys yang valid DAN umum dipakai untuk topik tertentu.
+=================================================================
+HADITH API PARAMETERS
+=================================================================
+JANGAN PERNAH mengarang book/chapter/number yang tidak ada!
 
-Supported keys untuk hadithapi:
-- book          : slug kitab yang disebut user atau bab relevan (TIDAK BOLEH DIPALSUKAN)
-- chapter       : nomor bab yang disebut user atau bab relevan yang benar-benar ada
-- hadithNumber  : jika user menyebut nomor
-- hadithArabic  : jika user mengirim teks Arab
-- hadithEnglish : untuk verifikasi hadis dan mencari kata dari hadis (keyword dari teks hadis)
-- status        : jika user menyebut sahih / hasan / dhaif
+Gunakan hadithEnglish untuk pencarian keyword:
+- Ekstrak kata kunci PENTING dari pertanyaan user
+- Gunakan bahasa Inggris
+- 2-5 kata yang paling relevan
+- Contoh: "hukum membunuh" → "killing murder blood"
 
-RULES:
-- TOPIK → WAJIB mengembalikan "book" + "chapter" yang VALID (tidak boleh hadithEnglish)
-- VERIFIKASI TEKS HADIS → boleh hadithEnglish
-- Tidak boleh menebak nomor hadis
-- Tidak boleh membuat kitab atau chapter palsu
-- Hanya keluarkan data yang bisa digunakan langsung di hadithapi
+Valid books (slug):
+- sahih-bukhari
+- sahih-muslim  
+- sunan-abudawud
+- jami-tirmidhi
+- sunan-nasai
+- sunan-ibnmajah
+- bulugh-al-maram
+- 40-hadith-nawawi
+- riyadh-as-salihin
 
-FORMAT (hanya isi field yang memang valid):
+STRATEGY:
+1. User menyebut kitab/chapter/nomor → gunakan data eksplisit
+2. User hanya menyebut topik → gunakan hadithEnglish dengan keyword
+3. User kirim teks hadits → gunakan hadithEnglish untuk verifikasi
 
+OUTPUT FORMAT:
 {
   "type": "hadith_query",
   "params": {
-    "book": "sahih-bukhari",
-    "chapter": 1
+    "hadithEnglish": "keyword1 keyword2"
   }
 }
-=================================================================
 
-3) DEFAULT  
-Triggered ketika:
-- Pesan tidak meminta pencarian hadis
-- Pesan bukan verifikasi
-- Pesan adalah pertanyaan umum tentang agama / budi pekerti
-
-FORMAT:
+ATAU jika user sebutkan eksplisit:
 {
-  "type": "default",
-  "message": "JAWABAN NORMALMU DI SINI"
+  "type": "hadith_query", 
+  "params": {
+    "book": "sahih-bukhari",
+    "hadithNumber": "123"
+  }
 }
 
-"message" harus berisi jawaban normal seperti AI biasa.
 =================================================================
+EXAMPLES
+=================================================================
+User: "hadits tentang membunuh manusia"
+Output: {"type": "hadith_query", "params": {"hadithEnglish": "killing murder bloodshed"}}
 
-GLOBAL RULES:
-- Output harus 100% valid JSON (tanpa teks lain).
-- Tidak boleh menambah, mengarang, atau menghalukan kitab/bab/nomor.
-- hadithEnglish hanya dipakai ketika user mengirim teks hadis (verifikasi).
-- Untuk pertanyaan topik, wajib pakai book + chapter yang valid.
-- Jangan menulis isi hadis.
+User: "cari hadits sahih bukhari nomor 25"  
+Output: {"type": "hadith_query", "params": {"book": "sahih-bukhari", "hadithNumber": "25"}}
 
+User: "verifikasi: la ilaha illallah"
+Output: {"type": "hadith_query", "params": {"hadithEnglish": "la ilaha illallah"}}
+
+User: "apa itu hadits shahih?"
+Output: {"type": "default", "message": "Hadits shahih adalah..."}
+
+User: "halo"
+Output: {"type": "invalid", "message": "Silakan tanyakan tentang hadits"}
+
+=================================================================
+CRITICAL RULES
+=================================================================
+✓ hadithEnglish = keyword pencarian (2-5 kata penting)
+✓ Hanya gunakan book/chapter/number jika user SEBUTKAN EKSPLISIT
+✓ Output 100% valid JSON tanpa teks tambahan
+✗ JANGAN mengarang kitab/bab/nomor
+✗ JANGAN gunakan book+chapter kalau tidak yakin
 `
         },
         {
@@ -382,7 +393,7 @@ Sumber: [URL ke sunnah.com]
 ---
 
 CONTOH OUTPUT:
-<h2>Sahih Muslim - Hadits 156</h2> <small>[status]</small>
+<h2>Sahih Muslim - Hadits 156</h2> <small>status</small>
  <a href="https://sunnah.com/muslim/1/156">lihat hadith ✅</a>
 [Isi hadits dari API - text arab]
 [Isi hadits dari API - terjemahkan bahasa sesuai pertanyaan user]
@@ -446,7 +457,7 @@ Format hadits di atas sesuai template. Pilih HANYA yang relevan dengan pertanyaa
 
     messages.value.push({
       sender: 'ai',
-      text: 'Maaf, terjadi kesalahan saat menghubungi AI. Pastikan API key Groq sudah dikonfigurasi dengan benar di file .env',
+      text: 'Maaf, terjadi kesalahan saat proses AI',
       time: getCurrentTime()
     })
   } finally {
