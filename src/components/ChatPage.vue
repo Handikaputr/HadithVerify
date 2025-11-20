@@ -333,26 +333,23 @@ GLOBAL RULES:
     let finalResponse;
     if (firstResponse.type === "hadith_query") {
       try {
-        const apiKey = '$2y$10$JmiFVjtUXIVjqDtcJ6nOKZ4Dt4ZS9HIQn2B3chvmpjnacAw6yu';
+        // Call Vercel Edge Function instead of direct API
+        const params = new URLSearchParams();
 
-        let targetUrl = `https://hadithapi.com/api/hadiths/?apiKey=${apiKey}`;
-
-        // Params is an object, not array - iterate with Object.entries
+        // Add params from Groq response
         if (firstResponse.params && typeof firstResponse.params === 'object') {
           Object.entries(firstResponse.params).forEach(([key, value]) => {
-            targetUrl += `&${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+            params.append(key, value);
           });
         }
 
-        console.log("Fetching Hadith API URL:", targetUrl);
-        const response = await axios.get('https://api.allorigins.win/get', {
-          params: {
-            url: targetUrl
-          }
-        });
+        const edgeUrl = `/api/hadith?${params.toString()}`;
+        console.log("Calling Edge Function:", edgeUrl);
 
-        const data = JSON.parse(response.data.contents);
-        console.log("Hadith API Response:", data);
+        const response = await axios.get(edgeUrl);
+        console.log("Hadith API Response:", response);
+        const data = response.data;
+
         if (data && data.hadiths && data.hadiths.data) {
           finalResponse = data.hadiths.data.map((h, i) =>
             `${i + 1}. ${h.hadithEnglish}\n   - ${h.book.bookName}\n`
