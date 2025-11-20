@@ -188,34 +188,13 @@ const groq = new Groq({
   dangerouslyAllowBrowser: true
 })
 
-try {
-    const chatCompletion = await groq.chat.completions.create({
-      "messages": [
-        {
-          "role": "system",
-          "content": `Anda adalah classifier untuk pertanyaan hadits. Keluarkan HANYA JSON. jangan menghayal informasi apapun.
-`
-        },
-        {
-          "role": "user",
-          "content": "hadis tentang sedekah"
-        }
-      ],
-      "model": "openai/gpt-oss-120b",
-      "temperature": 1,
-      "max_completion_tokens": 2000,
-      "top_p": 1,
-      "stream": false,
-      "stop": null
-    })
-  } catch (error) {
-    console.error('Error calling Groq:', error)
-  }
+
 onMounted(() => {
   const savedTheme = localStorage.getItem('theme')
   if (savedTheme) {
     isDarkMode.value = savedTheme === 'dark'
   }
+  
 })
 
 function toggleTheme() {
