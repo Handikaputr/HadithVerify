@@ -187,6 +187,30 @@ const groq = new Groq({
   apiKey: import.meta.env.VITE_GROQ_API_KEY || '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',
   dangerouslyAllowBrowser: true
 })
+
+try {
+    const chatCompletion = await groq.chat.completions.create({
+      "messages": [
+        {
+          "role": "system",
+          "content": `Anda adalah classifier untuk pertanyaan hadits. Keluarkan HANYA JSON. jangan menghayal informasi apapun.
+`
+        },
+        {
+          "role": "user",
+          "content": "hadis tentang sedekah"
+        }
+      ],
+      "model": "openai/gpt-oss-120b",
+      "temperature": 1,
+      "max_completion_tokens": 2000,
+      "top_p": 1,
+      "stream": false,
+      "stop": null
+    })
+  } catch (error) {
+    console.error('Error calling Groq:', error)
+  }
 onMounted(() => {
   const savedTheme = localStorage.getItem('theme')
   if (savedTheme) {
@@ -227,7 +251,7 @@ async function sendMessage() {
   // Scroll to bottom
   await nextTick()
   scrollToBottom()
-
+  
   try {
     // Stream response from Groq
     const chatCompletion = await groq.chat.completions.create({
