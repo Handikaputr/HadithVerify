@@ -262,14 +262,14 @@ Triggered when:
 
 Your task:
 Extract ONLY data that *benar-benar disebut user*  
-atau data *book + chapter* yang valid DAN umum dipakai untuk topik tertentu.
+atau data supported keys yang valid DAN umum dipakai untuk topik tertentu.
 
 Supported keys untuk hadithapi:
 - book          : slug kitab yang disebut user atau bab relevan (TIDAK BOLEH DIPALSUKAN)
 - chapter       : nomor bab yang disebut user atau bab relevan yang benar-benar ada
 - hadithNumber  : jika user menyebut nomor
 - hadithArabic  : jika user mengirim teks Arab
-- hadithEnglish : HANYA untuk verifikasi hadis (keyword dari teks hadis), bukan untuk topik
+- hadithEnglish : untuk verifikasi hadis dan mencari kata dari hadis (keyword dari teks hadis)
 - status        : jika user menyebut sahih / hasan / dhaif
 
 RULES:
