@@ -386,8 +386,8 @@ Sumber: https://sunnah.com/bukhari/2/25
 
 ---
 
-**Sahih Muslim** - Hadits 156
-Sumber: https://sunnah.com/muslim/1/156
+<h2>Sahih Muslim - Hadits 156</h2>
+ <a href="https://sunnah.com/muslim/1/156">lihat hadith ✅</a>
 
 [Isi hadits dari API]
 
