@@ -169,6 +169,7 @@
 import { ref, nextTick, onMounted } from 'vue'
 import Groq from 'groq-sdk'
 import axios from 'axios'
+
 const messages = ref([
   {
     sender: 'ai',
@@ -182,11 +183,11 @@ const messagesContainer = ref(null)
 const isDarkMode = ref(true)
 const isLoading = ref(false)
 
-// Groq API setup
 const groq = new Groq({
   apiKey: import.meta.env.VITE_GROQ_API_KEY || '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',
   dangerouslyAllowBrowser: true
 })
+
 onMounted(() => {
   const savedTheme = localStorage.getItem('theme')
   if (savedTheme) {
@@ -224,226 +225,43 @@ async function sendMessage() {
   newMessage.value = ''
   isLoading.value = true
 
-  // Scroll to bottom
   await nextTick()
   scrollToBottom()
 
   try {
-    // Stream response from Groq
-    const chatCompletion = await groq.chat.completions.create({
-      "messages": [
-        {
-          "role": "system",
-          "content": `You are a Hadith Query Analyzer. Output ONLY valid JSON.
+    // Step 1: Classify the question and extract parameters
+    const classification = await classifyQuestion(userQuestion)
+    console.log("Classification:", classification)
 
-=================================================================
-DETECTION LOGIC
-=================================================================
-1) INVALID - Tidak relevan dengan hadits
-   Trigger: pesan umum, greeting, tidak ada topik hadits
-   Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
+    let finalResponse
 
-2) HADITH_QUERY - User mencari hadits
-   Trigger: 
-   - "hadits tentang..." / "hadith about..."
-   - Verifikasi teks hadits (Arab/English/Indonesia)
-   - Menyebut kitab/chapter/nomor eksplisit
-   
-3) DEFAULT - Pertanyaan umum agama
-   Trigger: pertanyaan fiqh, tafsir, sejarah, tidak minta hadits spesifik
-   Output: {"type": "default", "message": "JAWABAN SINGKAT"}
+    if (classification.type === 'hadith_query') {
+      // Step 2: Search for hadith
+      const hadiths = await searchHadith(classification.params)
+      console.log("Hadiths found:", hadiths)
 
-=================================================================
-HADITH API PARAMETERS
-=================================================================
-JANGAN PERNAH mengarang book/chapter/number yang tidak ada!
-
-Gunakan hadithEnglish untuk pencarian keyword:
-- Ekstrak kata kunci PENTING dari pertanyaan user
-- Gunakan bahasa Inggris
-- 2-5 kata yang paling relevan
-- Contoh: "hukum membunuh" → "killing murder blood"
-
-Valid books (slug):
-- sahih-bukhari
-- sahih-muslim  
-- sunan-abudawud
-- jami-tirmidhi
-- sunan-nasai
-- sunan-ibnmajah
-- bulugh-al-maram
-- 40-hadith-nawawi
-- riyadh-as-salihin
-
-STRATEGY:
-1. User menyebut kitab/chapter/nomor → gunakan data eksplisit
-2. User hanya menyebut topik → gunakan hadithEnglish dengan keyword
-3. User kirim teks hadits → gunakan hadithEnglish untuk verifikasi
-
-OUTPUT FORMAT:
-{
-  "type": "hadith_query",
-  "params": {
-    "hadithEnglish": "keyword1 keyword2"
-  }
-}
-
-ATAU jika user sebutkan eksplisit:
-{
-  "type": "hadith_query", 
-  "params": {
-    "book": "sahih-bukhari",
-    "hadithNumber": "123"
-  }
-}
-
-=================================================================
-EXAMPLES
-=================================================================
-User: "hadits tentang membunuh manusia"
-Output: {"type": "hadith_query", "params": {"hadithEnglish": "killing murder bloodshed"}}
-
-User: "cari hadits sahih bukhari nomor 25"  
-Output: {"type": "hadith_query", "params": {"book": "sahih-bukhari", "hadithNumber": "25"}}
-
-User: "verifikasi: la ilaha illallah"
-Output: {"type": "hadith_query", "params": {"hadithEnglish": "la ilaha illallah"}}
-
-User: "apa itu hadits shahih?"
-Output: {"type": "default", "message": "Hadits shahih adalah..."}
-
-User: "halo"
-Output: {"type": "invalid", "message": "Silakan tanyakan tentang hadits"}
-
-=================================================================
-CRITICAL RULES
-=================================================================
-✓ hadithEnglish = keyword pencarian (2-5 kata penting)
-✓ Hanya gunakan book/chapter/number jika user SEBUTKAN EKSPLISIT
-✓ Output 100% valid JSON tanpa teks tambahan
-✗ JANGAN mengarang kitab/bab/nomor
-✗ JANGAN gunakan book+chapter kalau tidak yakin
-`
-        },
-        {
-          "role": "user",
-          "content": userQuestion
-        }
-      ],
-      "model": "openai/gpt-oss-120b",
-      "temperature": 1,
-      "max_completion_tokens": 2000,
-      "top_p": 1,
-      "stream": false,
-      "stop": null
-    })
-
-    let firstResponse = JSON.parse(chatCompletion.choices[0].message.content);
-    console.log("First Response:", firstResponse);
-
-    let finalResponse;
-    if (firstResponse.type === "hadith_query") {
-      try {
-        // Call Vercel Edge Function instead of direct API
-        const params = new URLSearchParams();
-
-        // Add params from Groq response
-        if (firstResponse.params && typeof firstResponse.params === 'object') {
-          Object.entries(firstResponse.params).forEach(([key, value]) => {
-            params.append(key, value);
-          });
-        }
-
-        const edgeUrl = `/api/hadith?${params.toString()}`;
-        console.log("Calling Edge Function:", edgeUrl);
-
-        const response = await axios.get(edgeUrl);
-        console.log("Hadith API Response:", response);
-        const data = response.data;
-
-
-        //  kondisi pertama - berkaitan dengan hadith
-        if (data && data.hadiths && data.hadiths.data) {
-          let hadithList = data.hadiths.data.map((h, i) =>
-            `${i + 1}. ${h.hadithEnglish}\n   - ${h.book.bookName}\n`
-          ).join('\n');
-
-          const chatSummary = await groq.chat.completions.create({
-            "messages": [
-              {
-                "role": "system",
-                "content": `Anda adalah Hadith Formatter yang HANYA memformat data hadits yang sudah ada.
-
-ATURAN KETAT:
-1. DILARANG menambah, mengubah, atau mengarang isi hadits
-2. DILARANG menambah komponen yang tidak ada (tingkatan, nomor, dll)
-3. HANYA pilih hadits yang RELEVAN dengan pertanyaan user
-4. WAJIB gunakan bahasa yang sama dengan pertanyaan user
-5. Format HARUS sesuai template
-
-TEMPLATE FORMAT (per hadits):
-tampilkan juga informasi penting seperti kitab, status, nomor, dan penulis (jika ada).
-
-
-**<h2>Nama Kitab</h2>** - <small>[Status jika ada] - [Nomor jika ada]</small>
-Sumber: [URL ke sunnah.com]
-
-[Isi hadits ASLI tanpa perubahan]
-
----
-
-CONTOH OUTPUT:
-<h2>Sahih Muslim - Hadits 156</h2> <small>status</small>
- <a href="https://sunnah.com/muslim/1/156">lihat hadith ✅</a>
-[Isi hadits dari API - text arab]
-[Isi hadits dari API - terjemahkan bahasa sesuai pertanyaan user]
-
----
-
-<h2>Sahih Muslim - Hadits 156</h2>
- <a href="https://sunnah.com/muslim/1/156">lihat hadith ✅</a>
-
-[Isi hadits dari API]
-
-INSTRUKSI:
-- Jika hadits tidak relevan dengan pertanyaan, JANGAN tampilkan
-- Jika data kosong (status/nomor), JANGAN tulis "[tidak ada]" atau sejenisnya
-- Berikan pengantar singkat (1 kalimat) yang relevan dengan pertanyaan user
-- Maksimal tampilkan 5 hadits paling relevan
-`
-              },
-              {
-                "role": "user",
-                "content": `Pertanyaan user: "${userQuestion}"
-
-Data hadits dari API:
-${hadithList}
-
-Format hadits di atas sesuai template. Pilih HANYA yang relevan dengan pertanyaan user.`
-              }
-            ],
-            "model": "openai/gpt-oss-120b",
-            "temperature": 0.3,
-            "max_completion_tokens": 1500,
-            "top_p": 1,
-            "stream": false,
-            "stop": null
-          });
-          finalResponse = chatSummary.choices[0].message.content;
+      // Step 3: Format the response
+      if (hadiths && hadiths.length > 0) {
+        finalResponse = await formatHadithResponse(hadiths, userQuestion)
+      } else {
+        // Fallback: try keyword search if specific search failed
+        if (classification.params.hadithNumber || classification.params.book) {
+          const fallbackHadiths = await searchHadith({
+            hadithEnglish: classification.params.hadithEnglish || extractKeywords(userQuestion)
+          })
+          if (fallbackHadiths && fallbackHadiths.length > 0) {
+            finalResponse = await formatHadithResponse(fallbackHadiths, userQuestion)
+          } else {
+            finalResponse = 'Maaf, tidak ditemukan hadits yang sesuai dengan pencarian Anda.'
+          }
         } else {
-          finalResponse = 'Tidak ditemukan hadits yang sesuai.';
+          finalResponse = 'Maaf, tidak ditemukan hadits yang sesuai dengan pencarian Anda.'
         }
-
-      } catch (error) {
-        console.error("Error fetching hadith:", error);
-        finalResponse = `Terjadi kesalahan saat memvalidasi data hadiths`;
       }
-
-    } else if (firstResponse.type === "invalid") {
-      finalResponse = firstResponse.message;
-
+    } else if (classification.type === 'invalid') {
+      finalResponse = classification.message
     } else {
-      finalResponse = firstResponse.message;
+      finalResponse = classification.message
     }
 
     messages.value.push({
@@ -453,21 +271,142 @@ Format hadits di atas sesuai template. Pilih HANYA yang relevan dengan pertanyaa
     })
 
   } catch (error) {
-    console.error('Error calling Groq:', error)
-
+    console.error('Error in sendMessage:', error)
     messages.value.push({
       sender: 'ai',
-      text: 'Maaf, terjadi kesalahan saat proses AI',
+      text: 'Maaf, terjadi kesalahan saat memproses permintaan Anda.',
       time: getCurrentTime()
     })
   } finally {
-
-
-
     isLoading.value = false
     await nextTick()
     scrollToBottom()
   }
+}
+
+async function classifyQuestion(question) {
+  const chatCompletion = await groq.chat.completions.create({
+    messages: [
+      {
+        role: "system",
+        content: `Anda adalah classifier untuk pertanyaan hadits. Keluarkan HANYA JSON.
+
+Tugas:
+1. Tentukan apakah pertanyaan user termasuk:
+   - "hadith_query": jika user menanyakan hadits tertentu (dengan teks, kitab, nomor, atau topik)
+   - "default": pertanyaan umum tentang Islam tapi tidak meminta hadits spesifik
+   - "invalid": tidak relevan dengan hadits atau Islam
+
+2. Untuk "hadith_query", ekstrak parameter:
+   - book: hanya jika user menyebutkan nama kitab secara eksplisit (e.g., "Bukhari", "Muslim")
+   - hadithNumber: hanya jika user menyebutkan nomor hadits
+   - hadithEnglish: keyword untuk pencarian (2-5 kata penting dalam Bahasa Inggris)
+
+Contoh:
+User: "Hadits tentang sedekah"
+→ {"type": "hadith_query", "params": {"hadithEnglish": "charity donation"}}
+
+User: "Bukhari nomor 25"
+→ {"type": "hadith_query", "params": {"book": "sahih-bukhari", "hadithNumber": "25"}}
+
+User: "Apa hukum shalat?"
+→ {"type": "default", "message": "Shalat adalah kewajiban bagi setiap muslim..."}
+
+User: "Halo"
+→ {"type": "invalid", "message": "Silakan tanyakan tentang hadits"}
+
+Jangan mengarang informasi. Jika tidak yakin, gunakan hadithEnglish saja.`
+      },
+      {
+        role: "user",
+        content: question
+      }
+    ],
+    model: "mixtral-8x7b-32768", // Gunakan model yang lebih cepat
+    temperature: 0.1,
+    max_tokens: 500,
+    response_format: { type: "json_object" }
+  })
+
+  return JSON.parse(chatCompletion.choices[0].message.content)
+}
+
+async function searchHadith(params) {
+  try {
+    const searchParams = new URLSearchParams()
+
+    // Add all parameters that exist
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        searchParams.append(key, value.toString())
+      }
+    })
+
+    const response = await axios.get(`/api/hadith?${searchParams.toString()}`)
+    return response.data.hadiths?.data || []
+  } catch (error) {
+    console.error("Error searching hadith:", error)
+    return null
+  }
+}
+
+async function formatHadithResponse(hadiths, userQuestion) {
+  // Batasi jumlah hadits yang ditampilkan
+  const limitedHadiths = hadiths.slice(0, 3)
+
+  const chatCompletion = await groq.chat.completions.create({
+    messages: [
+      {
+        role: "system",
+        content: `Anda adalah pembentuk respons hadits. Format hadits yang diberikan dengan cara yang mudah dibaca.
+
+ATURAN:
+1. Tampilkan maksimal 3 hadits yang paling relevan dengan pertanyaan user.
+2. Untuk setiap hadits, sertakan:
+   - Kitab dan nomor (jika ada)
+   - Teks hadits dalam bahasa Indonesia (jika tersedia) atau Inggris
+   - Tautan ke sunnah.com (jika ada informasi yang cukup)
+3. Gunakan bahasa yang sama dengan pertanyaan user.
+4. Jangan mengubah atau menambah isi hadits.
+5. Berikan pengantar singkat.
+
+Format:
+[Pengantar singkat]
+
+**Kitab - Nomor**
+[Teks hadits]
+[Tautan jika ada]
+
+---`
+      },
+      {
+        role: "user",
+        content: `Pertanyaan: "${userQuestion}"
+
+Data hadits:
+${limitedHadiths.map((h, i) => `
+${i + 1}. Kitab: ${h.book?.bookName || 'Tidak diketahui'}
+   Nomor: ${h.hadithNumber || 'Tidak diketahui'}
+   Teks: ${h.hadithEnglish || h.hadithArabic || 'Teks tidak tersedia'}
+   ${h.chapter ? `Bab: ${h.chapter}` : ''}
+`).join('\n')}`
+      }
+    ],
+    model: "mixtral-8x7b-32768",
+    temperature: 0.3,
+    max_tokens: 1500
+  })
+
+  return chatCompletion.choices[0].message.content
+}
+
+function extractKeywords(question) {
+  // Simple keyword extraction - bisa ditingkatkan nanti
+  const stopWords = ['apa', 'bagaimana', 'apakah', 'yang', 'dengan', 'untuk', 'tentang', 'hadits', 'hadis']
+  const words = question.toLowerCase().split(' ')
+  return words.filter(word => 
+    word.length > 2 && !stopWords.includes(word)
+  ).slice(0, 3).join(' ')
 }
 
 function scrollToBottom() {
