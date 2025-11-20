@@ -351,16 +351,36 @@ GLOBAL RULES:
         const data = response.data;
 
         if (data && data.hadiths && data.hadiths.data) {
-          finalResponse = data.hadiths.data.map((h, i) =>
+          let hadithList = data.hadiths.data.map((h, i) =>
             `${i + 1}. ${h.hadithEnglish}\n   - ${h.book.bookName}\n`
           ).join('\n');
+
+          const chatSummary = await groq.chat.completions.create({
+            "messages": [
+              {
+                "role": "system",
+                "content": `You are a Hadith Summary Generator.
+Your task is to summarize the following hadiths into a concise format for the user.
+`              },
+              {
+                "role": "user",
+                "content": `Here are the hadiths:\n\n${hadithList}\n\nPlease provide a brief summary highlighting the key points of these hadiths for the user. sesuaikan dengan bahasa user yang sebelumnya digunakan. user sebelumnya bertanya ${userQuestion}, jadi buat ringkasan atau ambil hadith yang sesuai dan mudah dipahami berdasarkan pertanyaan user, buat link hadith menuju sumber di SUNNAH.com . JANGAN TAMBAHKAN ATAU UBAH ISI HADITS.`
+              }
+            ],
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.7,
+            "max_completion_tokens": 1000,
+            "top_p": 1,
+            "stream": false,
+            "stop": null
+          });
         } else {
           finalResponse = 'Tidak ditemukan hadits yang sesuai.';
         }
 
       } catch (error) {
         console.error("Error fetching hadith:", error);
-        finalResponse = `Gagal mengambil data hadits: ${error.response?.data?.message || error.message}`;
+        finalResponse = `Terjadi kesalahan saat memvalidasi data hadiths`;
       }
 
     } else if (firstResponse.type === "invalid") {
