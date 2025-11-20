@@ -169,7 +169,6 @@
 import { ref, nextTick, onMounted } from 'vue'
 import Groq from 'groq-sdk'
 import axios from 'axios'
-
 const messages = ref([
   {
     sender: 'ai',
@@ -183,11 +182,11 @@ const messagesContainer = ref(null)
 const isDarkMode = ref(true)
 const isLoading = ref(false)
 
+// Groq API setup
 const groq = new Groq({
   apiKey: import.meta.env.VITE_GROQ_API_KEY || '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',
   dangerouslyAllowBrowser: true
 })
-
 onMounted(() => {
   const savedTheme = localStorage.getItem('theme')
   if (savedTheme) {
@@ -225,71 +224,17 @@ async function sendMessage() {
   newMessage.value = ''
   isLoading.value = true
 
+  // Scroll to bottom
   await nextTick()
   scrollToBottom()
 
   try {
-    // Step 1: Classify the question and extract parameters
-    const classification = await classifyQuestion(userQuestion)
-    console.log("Classification:", classification)
-
-    let finalResponse
-
-    if (classification.type === 'hadith_query') {
-      // Step 2: Search for hadith
-      const hadiths = await searchHadith(classification.params)
-      console.log("Hadiths found:", hadiths)
-
-      // Step 3: Format the response
-      if (hadiths && hadiths.length > 0) {
-        finalResponse = await formatHadithResponse(hadiths, userQuestion)
-      } else {
-        // Fallback: try keyword search if specific search failed
-        if (classification.params.hadithNumber || classification.params.book) {
-          const fallbackHadiths = await searchHadith({
-            hadithEnglish: classification.params.hadithEnglish || extractKeywords(userQuestion)
-          })
-          if (fallbackHadiths && fallbackHadiths.length > 0) {
-            finalResponse = await formatHadithResponse(fallbackHadiths, userQuestion)
-          } else {
-            finalResponse = 'Maaf, tidak ditemukan hadits yang sesuai dengan pencarian Anda.'
-          }
-        } else {
-          finalResponse = 'Maaf, tidak ditemukan hadits yang sesuai dengan pencarian Anda.'
-        }
-      }
-    } else if (classification.type === 'invalid') {
-      finalResponse = classification.message
-    } else {
-      finalResponse = classification.message
-    }
-
-    messages.value.push({
-      sender: 'ai',
-      text: finalResponse,
-      time: getCurrentTime()
-    })
-
-  } catch (error) {
-    console.error('Error in sendMessage:', error)
-    messages.value.push({
-      sender: 'ai',
-      text: 'Maaf, terjadi kesalahan saat memproses permintaan Anda.',
-      time: getCurrentTime()
-    })
-  } finally {
-    isLoading.value = false
-    await nextTick()
-    scrollToBottom()
-  }
-}
-
-async function classifyQuestion(question) {
-  const chatCompletion = await groq.chat.completions.create({
-    messages: [
-      {
-        role: "system",
-        content: `Anda adalah classifier untuk pertanyaan hadits. Keluarkan HANYA JSON.
+    // Stream response from Groq
+    const chatCompletion = await groq.chat.completions.create({
+      "messages": [
+        {
+          "role": "system",
+          "content": `Anda adalah classifier untuk pertanyaan hadits. Keluarkan HANYA JSON.
 
 Tugas:
 1. Tentukan apakah pertanyaan user termasuk:
@@ -315,98 +260,152 @@ User: "Apa hukum shalat?"
 User: "Halo"
 → {"type": "invalid", "message": "Silakan tanyakan tentang hadits"}
 
-Jangan mengarang informasi. Jika tidak yakin, gunakan hadithEnglish saja.`
-      },
-      {
-        role: "user",
-        content: question
-      }
-    ],
-    model: "mixtral-8x7b-32768", // Gunakan model yang lebih cepat
-    temperature: 0.1,
-    max_tokens: 500,
-    response_format: { type: "json_object" }
-  })
-
-  return JSON.parse(chatCompletion.choices[0].message.content)
-}
-
-async function searchHadith(params) {
-  try {
-    const searchParams = new URLSearchParams()
-
-    // Add all parameters that exist
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) {
-        searchParams.append(key, value.toString())
-      }
+Jangan mengarang informasi. Jika tidak yakin, gunakan hadithEnglish saja.
+`
+        },
+        {
+          "role": "user",
+          "content": userQuestion
+        }
+      ],
+      "model": "openai/gpt-oss-120b",
+      "temperature": 1,
+      "max_completion_tokens": 2000,
+      "top_p": 1,
+      "stream": false,
+      "stop": null
     })
 
-    const response = await axios.get(`/api/hadith?${searchParams.toString()}`)
-    return response.data.hadiths?.data || []
-  } catch (error) {
-    console.error("Error searching hadith:", error)
-    return null
-  }
-}
+    let firstResponse = JSON.parse(chatCompletion.choices[0].message.content);
+    console.log("First Response:", firstResponse);
 
-async function formatHadithResponse(hadiths, userQuestion) {
-  // Batasi jumlah hadits yang ditampilkan
-  const limitedHadiths = hadiths.slice(0, 3)
+    let finalResponse;
+    if (firstResponse.type === "hadith_query") {
+      try {
+        // Call Vercel Edge Function instead of direct API
+        const params = new URLSearchParams();
 
-  const chatCompletion = await groq.chat.completions.create({
-    messages: [
-      {
-        role: "system",
-        content: `Anda adalah pembentuk respons hadits. Format hadits yang diberikan dengan cara yang mudah dibaca.
+        // Add params from Groq response
+        if (firstResponse.params && typeof firstResponse.params === 'object') {
+          Object.entries(firstResponse.params).forEach(([key, value]) => {
+            params.append(key, value);
+          });
+        }
 
-ATURAN:
-1. Tampilkan maksimal 3 hadits yang paling relevan dengan pertanyaan user.
-2. Untuk setiap hadits, sertakan:
-   - Kitab dan nomor (jika ada)
-   - Teks hadits dalam bahasa Indonesia (jika tersedia) atau Inggris
-   - Tautan ke sunnah.com (jika ada informasi yang cukup)
-3. Gunakan bahasa yang sama dengan pertanyaan user.
-4. Jangan mengubah atau menambah isi hadits.
-5. Berikan pengantar singkat.
+        const edgeUrl = `/api/hadith?${params.toString()}`;
+        console.log("Calling Edge Function:", edgeUrl);
 
-Format:
-[Pengantar singkat]
+        const response = await axios.get(edgeUrl);
+        console.log("Hadith API Response:", response);
+        const data = response.data;
 
-**Kitab - Nomor**
-[Teks hadits]
-[Tautan jika ada]
 
----`
-      },
-      {
-        role: "user",
-        content: `Pertanyaan: "${userQuestion}"
+        //  kondisi pertama - berkaitan dengan hadith
+        if (data && data.hadiths && data.hadiths.data) {
+          let hadithList = data.hadiths.data.map((h, i) =>
+            `${i + 1}. ${h.hadithEnglish}\n   - ${h.book.bookName}\n`
+          ).join('\n');
 
-Data hadits:
-${limitedHadiths.map((h, i) => `
-${i + 1}. Kitab: ${h.book?.bookName || 'Tidak diketahui'}
-   Nomor: ${h.hadithNumber || 'Tidak diketahui'}
-   Teks: ${h.hadithEnglish || h.hadithArabic || 'Teks tidak tersedia'}
-   ${h.chapter ? `Bab: ${h.chapter}` : ''}
-`).join('\n')}`
+          const chatSummary = await groq.chat.completions.create({
+            "messages": [
+              {
+                "role": "system",
+                "content": `Anda adalah Hadith Formatter yang HANYA memformat data hadits yang sudah ada.
+
+ATURAN KETAT:
+1. DILARANG menambah, mengubah, atau mengarang isi hadits
+2. DILARANG menambah komponen yang tidak ada (tingkatan, nomor, dll)
+3. HANYA pilih hadits yang RELEVAN dengan pertanyaan user
+4. WAJIB gunakan bahasa yang sama dengan pertanyaan user
+5. Format HARUS sesuai template
+
+TEMPLATE FORMAT (per hadits):
+tampilkan juga informasi penting seperti kitab, status, nomor, dan penulis (jika ada).
+
+
+**<h2>Nama Kitab</h2>** - <small>[Status jika ada] - [Nomor jika ada]</small>
+Sumber: [URL ke sunnah.com]
+
+[Isi hadits ASLI tanpa perubahan]
+
+---
+
+CONTOH OUTPUT:
+<h2>Sahih Muslim - Hadits 156</h2> <small>status</small>
+ <a href="https://sunnah.com/muslim/1/156">lihat hadith ✅</a>
+[Isi hadits dari API - text arab]
+[Isi hadits dari API - terjemahkan bahasa sesuai pertanyaan user]
+
+---
+
+<h2>Sahih Muslim - Hadits 156</h2>
+ <a href="https://sunnah.com/muslim/1/156">lihat hadith ✅</a>
+
+[Isi hadits dari API]
+
+INSTRUKSI:
+- Jika hadits tidak relevan dengan pertanyaan, JANGAN tampilkan
+- Jika data kosong (status/nomor), JANGAN tulis "[tidak ada]" atau sejenisnya
+- Berikan pengantar singkat (1 kalimat) yang relevan dengan pertanyaan user
+- Maksimal tampilkan 5 hadits paling relevan
+`
+              },
+              {
+                "role": "user",
+                "content": `Pertanyaan user: "${userQuestion}"
+
+Data hadits dari API:
+${hadithList}
+
+Format hadits di atas sesuai template. Pilih HANYA yang relevan dengan pertanyaan user.`
+              }
+            ],
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.3,
+            "max_completion_tokens": 1500,
+            "top_p": 1,
+            "stream": false,
+            "stop": null
+          });
+          finalResponse = chatSummary.choices[0].message.content;
+        } else {
+          finalResponse = 'Tidak ditemukan hadits yang sesuai.';
+        }
+
+      } catch (error) {
+        console.error("Error fetching hadith:", error);
+        finalResponse = `Terjadi kesalahan saat memvalidasi data hadiths`;
       }
-    ],
-    model: "mixtral-8x7b-32768",
-    temperature: 0.3,
-    max_tokens: 1500
-  })
 
-  return chatCompletion.choices[0].message.content
-}
+    } else if (firstResponse.type === "invalid") {
+      finalResponse = firstResponse.message;
 
-function extractKeywords(question) {
-  // Simple keyword extraction - bisa ditingkatkan nanti
-  const stopWords = ['apa', 'bagaimana', 'apakah', 'yang', 'dengan', 'untuk', 'tentang', 'hadits', 'hadis']
-  const words = question.toLowerCase().split(' ')
-  return words.filter(word => 
-    word.length > 2 && !stopWords.includes(word)
-  ).slice(0, 3).join(' ')
+    } else {
+      finalResponse = firstResponse.message;
+    }
+
+    messages.value.push({
+      sender: 'ai',
+      text: finalResponse,
+      time: getCurrentTime()
+    })
+
+  } catch (error) {
+    console.error('Error calling Groq:', error)
+
+    messages.value.push({
+      sender: 'ai',
+      text: 'Maaf, terjadi kesalahan saat proses AI',
+      time: getCurrentTime()
+    })
+  } finally {
+
+
+
+    isLoading.value = false
+    await nextTick()
+    scrollToBottom()
+  }
 }
 
 function scrollToBottom() {
