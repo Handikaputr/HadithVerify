@@ -489,7 +489,7 @@ async function sendMessage() {
         // Call Vercel Edge Function /api/hadith
         const params = new URLSearchParams({
           book: firstResponse.book,
-          chapter: firstResponse.chapter
+          hadithNumber: firstResponse.chapter
         });
 
         const edgeUrl = `/api/hadith?${params.toString()}`;
