@@ -260,7 +260,7 @@ Output: {"type": "hadith_search", "book": "Shahih Muslim", "chapter": "123"}
 User: "apa itu hadits shahih?"
 Output: {"type": "default", "message": "Hadits shahih adalah hadits yang memenuhi lima syarat: sanad bersambung, perawi adil, perawi dhabith, tidak syadz, dan tidak illat."}
 
-User: "halo"
+User: "siapakah jokowi?"
 Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
 `
   }
@@ -356,7 +356,7 @@ Output: {"type": "hadith_search", "book": "Shahih Muslim", "chapter": "123"}
 User: "apa itu hadits shahih?"
 Output: {"type": "default", "message": "Hadits shahih adalah hadits yang memenuhi lima syarat: sanad bersambung, perawi adil, perawi dhabith, tidak syadz, dan tidak illat."}
 
-User: "halo"
+User: "siapakah jokowi?"
 Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
 `
     }
