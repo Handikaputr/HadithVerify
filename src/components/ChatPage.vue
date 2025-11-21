@@ -317,7 +317,7 @@ Sunan an-Nasa'i
         "type": "hadith_query",
         "query": "kata kunci atau teks hadits yang dicari",
         "answer": {
-          "succes": [jawaban ketika hadist ditemukan],
+          "succes": [jawaban ketika hadist ditemukan, jika betarnya shahih atau tidaknya - ['hadist ini memiliki derajat yang tinggi' (jangan secara langsung menyebut shahih)],)],
           "failed": [jawaban ketika hadist tidak ditemukan - ['Maaf, saya tidak menemukan hadits yang spesifik menyebutkan ...' , 'Maaf, saya tidak menemukan hadits yang sesuai dengan teks yang Anda berikan di 6 kitab induk hadits (Kutubus Sittah). Hadits ini tidak dapat kami verifikasi keasliannya atau belum pasti']]
         }
       }
@@ -339,7 +339,7 @@ CRITICAL RULES
 EXAMPLES
 =================================================================
 User: "hadits tentang membunuh manusia"
-Output: {"type": "hadith_query", "query": "membunuh manusia", "answer": {"success": ["Berikut adalah hadits yang menyebutkan tentang membunuh manusia: ..."], "failed": ["Maaf, saya tidak menemukan hadits yang spesifik menyebutkan tentang membunuh manusia."]}}
+Output: {"type": "hadith_query", "query": "membunuh manusia", "answer": {"success": ["Berikut adalah hadits yang menyebutkan tentang membunuh manusia: ..."], "failed": ["Maaf, saya tidak menemukan hadits yang spesifik menyebutkan tentang membunuh manusia dari 6 kitab induk hadits (Kutubus Sittah)."]}}
 
 User: "cari hadits sahih al - bukhari nomor 25"  
 Output: {"type": "hadith_search", "book": "Shahih al-Bukhari", "chapter": "25"} //chapter atau nomor
@@ -416,6 +416,24 @@ async function sendMessage() {
     let firstResponse = JSON.parse(chatCompletion.choices[0].message.content);
     console.log("First Response:", firstResponse);
 
+    // Function to get hadith status based on book
+    const getHadithStatus = (bookName) => {
+      const shahihBooks = ['Shahih al-Bukhari', 'Shahih Muslim'];
+      if (shahihBooks.some(book => bookName.includes(book))) {
+        return {
+          badge: 'Aman',
+          color: 'bg-green-500',
+          explanation: 'Hadis dari Shahih Bukhari dan Shahih Muslim memiliki tingkat kesahihan tertinggi. Kedua kitab ini secara khusus disusun untuk mengumpulkan hadis-hadis yang paling otentik setelah Al-Qur\'an.'
+        };
+      } else {
+        return {
+          badge: 'Sedang',
+          color: 'bg-yellow-500',
+          explanation: 'Kitab ini (Sunan Abu Dawud, Sunan At-Tirmidzi, Sunan An-Nasa\'i, atau Sunan Ibnu Majah) memiliki kombinasi hadis shahih, hasan, dan dhaif. Meskipun demikian, di dalamnya terdapat banyak hadis yang berkualitas shahih. Disarankan untuk melakukan verifikasi lebih lanjut dengan ulama.'
+        };
+      }
+    };
+
     let finalResponse;
     if (firstResponse.type === "hadith_query") {
       try {
@@ -428,16 +446,9 @@ async function sendMessage() {
 
         const response = await axios.get(edgeUrl);
         console.log("Hadith API Response:", response);
-        let data = response.data;
+        const data = response.data;
 
-        // Sort data berdasarkan panjang teks (prioritaskan yang pendek)
-        if (data && data.length > 0) {
-          data = data.sort((a, b) => {
-            const lengthA = (a.arab || '').length + (a.indonesia || '').length;
-            const lengthB = (b.arab || '').length + (b.indonesia || '').length;
-            return lengthA - lengthB;
-          });
-        }
+
 
         //  kondisi pertama - berkaitan dengan hadith
         if (data != null && data.length > 0) {
@@ -453,14 +464,18 @@ async function sendMessage() {
             // Potong array dari belakang sampai di bawah 1000 token
             let truncatedData = [...data];
             while (truncatedData.length > 0) {
-              hadithList = truncatedData.map((h, i) =>
-                `<div class="mb-4 flex flex-col">
-                  <h2 class='text-lg font-semibold'>${i + 1}. ${h.book}</h2>
+              hadithList = truncatedData.map((h, i) => {
+                const status = getHadithStatus(h.book);
+                return `<div class="mb-4 flex flex-col">
+                  <div class="flex items-center gap-2 mb-2">
+                    <h2 class='text-lg font-semibold'>${i + 1}. ${h.book}</h2>
+                    <span class="px-2 py-1 text-xs rounded-full text-white ${status.color} cursor-help" title="${status.explanation}">${status.badge}</span>
+                  </div>
 <div class="mb-2 text-small"> Lebih Lengkap : <a target="_blank" href="https://sunnah.com/search?q=${h.arab}">sunnah.com ✅</a> <a target="_blank" href="https://www.hadits.id/tentang/${h.arab}">hadits.id ✅</a></div>
 <p class="text-bold text-end mb-4">${h.arab}</p>
 <p class='italic'>"${h.indonesia}"</p>
-                  </div>`
-              ).join('');
+                  </div>`;
+              }).join('');
 
               if (hadithList.length <= maxChars) break;
               truncatedData.pop(); // Hapus element terakhir
@@ -468,14 +483,18 @@ async function sendMessage() {
             console.log(`Hadith list truncated from ${data.length} to ${truncatedData.length} items`);
           } else {
             // Jika tidak perlu dipotong, tetap format sebagai HTML
-            hadithList = data.map((h, i) =>
-              `<div class="mb-4 flex flex-col">
-                <h2 class='text-lg font-semibold'>${i + 1}. ${h.book}</h2>
+            hadithList = data.map((h, i) => {
+              const status = getHadithStatus(h.book);
+              return `<div class="mb-4 flex flex-col">
+                <div class="flex items-center gap-2 mb-2">
+                  <h2 class='text-lg font-semibold'>${i + 1}. ${h.book}</h2>
+                  <span class="px-2 py-1 text-xs rounded-full text-white ${status.color} cursor-help" title="${status.explanation}">${status.badge}</span>
+                </div>
 <div class="mb-2 text-small"> Lebih Lengkap : <a target="_blank" href="https://sunnah.com/search?q=${h.arab}">sunnah.com ✅</a> <a target="_blank" href="https://www.hadits.id/tentang/${h.arab}">hadits.id ✅</a></div>
 <p class="text-bold text-end mb-4">${h.arab}</p>
 <p class='italic'>"${h.indonesia}"</p>
-                </div>`
-            ).join('');
+                </div>`;
+            }).join('');
           }
 
           console.log("Formatted Hadith List:", hadithList);
@@ -518,9 +537,13 @@ async function sendMessage() {
 
         if (data) {
           // Format sama seperti hadith_query
+          const status = getHadithStatus(data.book);
           const hadithList = [data].map((h, i) =>
             `<div class="mb-4 flex flex-col">
-              <h2 class='text-lg font-semibold'>${i + 1}. ${h.book}</h2>
+              <div class="flex items-center gap-2 mb-2">
+                <h2 class='text-lg font-semibold'>${i + 1}. ${h.book}</h2>
+                <span class="px-2 py-1 text-xs rounded-full text-white ${status.color} cursor-help" title="${status.explanation}">${status.badge}</span>
+              </div>
               <div class="mb-2 text-small">Lebih Lengkap: <a target="_blank" href="https://sunnah.com/searchDetail?q=${h.arab}">sunnah.com ✅</a> <a target="_blank" href="https://www.hadits.id/tentang/${h.arab}">hadits.id ✅</a></div>
               <p class="text-bold text-end">${h.arab}</p>
               <p class='italic'>"${h.indonesia}"</p>
