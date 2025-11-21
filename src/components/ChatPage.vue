@@ -182,9 +182,9 @@ const messagesContainer = ref(null)
 const isDarkMode = ref(true)
 const isLoading = ref(false)
 const chatData = ref([
-  {
-    "role": "system",
-    "content": `You are a Hadith Query Analyzer. Output ONLY valid JSON.
+    {
+      "role": "system",
+      "content": `You are a Hadith Query Analyzer. Output ONLY valid JSON.
 
 =================================================================
 DETECTION LOGIC
@@ -192,14 +192,21 @@ DETECTION LOGIC
 1) INVALID - Tidak relevan dengan hadits
    Trigger: pesan umum, greeting, tidak ada topik hadits
    Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
-
+    
 2) HADITH_SEARCH - User mencari hadits berdasarkan kitab dan nomor
    Trigger: 
-      - Menyebutkan salah satu kitab (bukhari, muslim, abudawud, tirmidhi, nasai, ibnmajah, bulugh, nawawi, riyadh) dan diikuti nomor (dengan atau tanpa kata 'nomor')
+      - Menyebutkan salah satu kitab (sahih-bukhari
+sahih-muslim
+al-tirmidhi
+abu-dawood
+ibn-e-majah
+sunan-nasai
+), penulisan nama kitab pada output sesuai daftar sebelumnya, jadi ketika user input nama kitab salah tulis sedikit maka benarkan. user input kitab dan angka nomor. jika user input kitab yang tidak ada pada daftar maka jangan maka respon invalid "kitab tidak temasuk dalam daftar 6 kitab induk hadits (Kutubus Sittah)".
    Output: 
       {
         "type": "hadith_search",
-        "search": "kitab:nomor"
+        "search": "kitab",
+        "chapter": "nomor"
       }
 
 3) HADITH_QUERY - User mencari hadits berdasarkan kata kunci
@@ -235,17 +242,17 @@ EXAMPLES
 User: "hadits tentang membunuh manusia"
 Output: {"type": "hadith_query", "query": "membunuh manusia", "answer": {"success": ["Berikut adalah hadits yang menyebutkan tentang membunuh manusia: ..."], "failed": ["Maaf, saya tidak menemukan hadits yang spesifik menyebutkan tentang membunuh manusia."]}}
 
-User: "cari hadits sahih bukhari nomor 25"  
-Output: {"type": "hadith_search", "search": "bukhari:25"}
+User: "cari hadits sahih al - bukhari nomor 25"  
+Output: {"type": "hadith_search", "book": "bukhari", "chapter": "25"} //chapter atau nomor
 
 User: "verifikasi: la ilaha illallah"
 Output: {"type": "hadith_query", "query": "la ilaha illallah", "answer": {"success": ["Berikut adalah hadits yang menyebutkan 'la ilaha illallah': ..."], "failed": ["Maaf, saya tidak menemukan hadits yang spesifik menyebutkan 'la ilaha illallah'."]}}
 
-User: "hadits bukhari 25"
-Output: {"type": "hadith_search", "search": "bukhari:25"}
+User: "hadits bukhori 25"
+Output: {"type": "hadith_search", "book": "bukhari", "chapter": "25"}
 
 User: "hadits muslim nomor 123"
-Output: {"type": "hadith_search", "search": "muslim:123"}
+Output: {"type": "hadith_search", "book": "muslim", "chapter": "123"}
 
 User: "apa itu hadits shahih?"
 Output: {"type": "default", "message": "Hadits shahih adalah hadits yang memenuhi lima syarat: sanad bersambung, perawi adil, perawi dhabith, tidak syadz, dan tidak illat."}
@@ -253,8 +260,8 @@ Output: {"type": "default", "message": "Hadits shahih adalah hadits yang memenuh
 User: "halo"
 Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
 `
-  }
-])
+    }
+  ])
 
 // Groq API setup
 const groq = new Groq({
