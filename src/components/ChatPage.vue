@@ -243,86 +243,61 @@ DETECTION LOGIC
    Trigger: pesan umum, greeting, tidak ada topik hadits
    Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
 
-2) HADITH_QUERY - User mencari hadits
+2) HADITH_SEARCH - User mencari hadits berdasarkan kitab dan nomor
    Trigger: 
-   - "hadits tentang..." / "hadith about..."
-   - Verifikasi teks hadits (Arab/English/Indonesia)
-   - Menyebut kitab/chapter/nomor eksplisit
-   
-3) DEFAULT - Pertanyaan umum agama
+      - Menyebutkan salah satu kitab (bukhari, muslim, abudawud, tirmidhi, nasai, ibnmajah, bulugh, nawawi, riyadh) dan diikuti nomor (dengan atau tanpa kata 'nomor')
+   Output: 
+      {
+        "type": "hadith_search",
+        "search": "kitab:nomor"
+      }
+
+3) HADITH_QUERY - User mencari hadits berdasarkan kata kunci
+   Trigger: 
+      - Ada kata kunci: "hadits", "hadith", "verifikasi", "cari hadits", "carikan hadits"
+      - Atau user memberikan teks hadits (dalam bahasa Arab atau Indonesia)
+   Output: 
+      {
+        "type": "hadith_query",
+        "query": "kata kunci atau teks hadits yang dicari"
+      }
+
+4) DEFAULT - Pertanyaan umum agama
    Trigger: pertanyaan fiqh, tafsir, sejarah, tidak minta hadits spesifik
    Output: {"type": "default", "message": "JAWABAN SINGKAT"}
 
 =================================================================
-HADITH API PARAMETERS
+CRITICAL RULES
 =================================================================
-JANGAN PERNAH mengarang book/chapter/number yang tidak ada!
-
-Gunakan hadithEnglish untuk pencarian keyword:
-- Ekstrak kata kunci PENTING dari pertanyaan user
-- Gunakan bahasa Inggris
-- 2-5 kata yang paling relevan
-- Contoh: "hukum membunuh" → "killing murder blood"
-
-Valid books (slug):
-- sahih-bukhari
-- sahih-muslim  
-- sunan-abudawud
-- jami-tirmidhi
-- sunan-nasai
-- sunan-ibnmajah
-- bulugh-al-maram
-- 40-hadith-nawawi
-- riyadh-as-salihin
-
-STRATEGY:
-1. User menyebut kitab/chapter/nomor → gunakan data eksplisit
-2. User hanya menyebut topik → gunakan hadithEnglish dengan keyword
-3. User kirim teks hadits → gunakan hadithEnglish untuk verifikasi
-
-OUTPUT FORMAT:
-{
-  "type": "hadith_query",
-  "params": {
-    "hadithEnglish": "keyword1 keyword2"
-  }
-}
-
-ATAU jika user sebutkan eksplisit:
-{
-  "type": "hadith_query", 
-  "params": {
-    "book": "sahih-bukhari",
-    "hadithNumber": "123"
-  }
-}
+✓ Untuk hadith_search, pastikan kitab yang disebutkan adalah dari daftar yang valid.
+✓ Untuk hadith_query, ambil kata kunci atau teks hadits yang dicari (dalam bahasa Indonesia atau Arab).
+✓ Output 100% valid JSON tanpa teks tambahan.
+✗ JANGAN mengarang kitab/bab/nomor.
+✗ JANGAN gunakan hadith_search jika tidak yakin.
 
 =================================================================
 EXAMPLES
 =================================================================
 User: "hadits tentang membunuh manusia"
-Output: {"type": "hadith_query", "params": {"hadithEnglish": "killing murder bloodshed"}}
+Output: {"type": "hadith_query", "query": "membunuh manusia"}
 
 User: "cari hadits sahih bukhari nomor 25"  
-Output: {"type": "hadith_query", "params": {"book": "sahih-bukhari", "hadithNumber": "25"}}
+Output: {"type": "hadith_search", "search": "bukhari:25"}
 
 User: "verifikasi: la ilaha illallah"
-Output: {"type": "hadith_query", "params": {"hadithEnglish": "la ilaha illallah"}}
+Output: {"type": "hadith_query", "query": "la ilaha illallah"}
+
+User: "hadits bukhari 25"
+Output: {"type": "hadith_search", "search": "bukhari:25"}
+
+User: "hadits muslim nomor 123"
+Output: {"type": "hadith_search", "search": "muslim:123"}
 
 User: "apa itu hadits shahih?"
-Output: {"type": "default", "message": "Hadits shahih adalah..."}
+Output: {"type": "default", "message": "Hadits shahih adalah hadits yang memenuhi lima syarat: sanad bersambung, perawi adil, perawi dhabith, tidak syadz, dan tidak illat."}
 
 User: "halo"
-Output: {"type": "invalid", "message": "Silakan tanyakan tentang hadits"}
-
-=================================================================
-CRITICAL RULES
-=================================================================
-✓ hadithEnglish = keyword pencarian (2-5 kata penting)
-✓ Hanya gunakan book/chapter/number jika user SEBUTKAN EKSPLISIT
-✓ Output 100% valid JSON tanpa teks tambahan
-✗ JANGAN mengarang kitab/bab/nomor
-✗ JANGAN gunakan book+chapter kalau tidak yakin
+Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
 `
         },
         {
@@ -345,16 +320,10 @@ CRITICAL RULES
     if (firstResponse.type === "hadith_query") {
       try {
         // Call Vercel Edge Function instead of direct API
-        const params = new URLSearchParams();
+        const query = new URLSearchParams();
 
-        // Add params from Groq response
-        if (firstResponse.params && typeof firstResponse.params === 'object') {
-          Object.entries(firstResponse.params).forEach(([key, value]) => {
-            params.append(key, value);
-          });
-        }
-
-        const edgeUrl = `/api/hadith?${params.toString()}`;
+        
+        const edgeUrl = `/api/search?q=${firstResponse.query.toString()}`;
         console.log("Calling Edge Function:", edgeUrl);
 
         const response = await axios.get(edgeUrl);
@@ -385,8 +354,8 @@ TEMPLATE FORMAT (per hadits):
 tampilkan juga informasi penting seperti kitab, status, nomor, dan penulis (jika ada).
 
 
-**<h2>Nama Kitab</h2>** - <small>[Status jika ada] - [Nomor jika ada]</small>
-Sumber: [URL ke sunnah.com]
+<h2>Nama Book</h2>
+Lebih Lengkap: [URL ke sunnah.com]
 
 [Isi hadits ASLI tanpa perubahan]
 
@@ -394,7 +363,7 @@ Sumber: [URL ke sunnah.com]
 
 CONTOH OUTPUT:
 <h2>Sahih Muslim - Hadits 156</h2> <small>status</small>
- <a href="https://sunnah.com/muslim/1/156">lihat hadith ✅</a>
+ Lebih Lengkap : <a href="https://sunnah.com/muslim/1/156">sunnah.com ✅</a>
 [Isi hadits dari API - text arab]
 [Isi hadits dari API - terjemahkan bahasa sesuai pertanyaan user]
 
