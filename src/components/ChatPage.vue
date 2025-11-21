@@ -512,7 +512,7 @@ async function sendMessage() {
           finalResponse = "Berikut adalah hadits yang Anda cari:\n\n" + hadithList;
           chatData.value.push({
             "role": "assistant",
-            "content": data
+            "content": data.toString()
           });
         } else if (response.status === 404) {
           finalResponse = "Maaf, saya tidak dapat menemukan hadits yang sesuai ";
