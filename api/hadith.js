@@ -21,7 +21,7 @@ export default async function handler(request) {
     const { searchParams } = new URL(request.url)
     
     // Build hadithapi.com URL
-    let targetUrl = 'https://hadith-api-wine.vercel.app/'
+    let targetUrl = 'https://hadithapi.com/api/hadiths/?apiKey=$2y$10$JmiFVjtUXIVjqDtcJ6nOKZ4Dt4ZS9HIQn2B3chvmpjnacAw6yu'
     
     // Append all query params
     for (const [key, value] of searchParams.entries()) {
