@@ -470,8 +470,7 @@ async function sendMessage() {
                   <div class="flex items-center gap-1.5 mb-2 flex-wrap">
                     <h2 class='text-base font-semibold'>${i + 1}. ${h.book}</h2>
                     <button onclick="alert('${status.explanation.replace(/'/g, "\\'")}')"
-                      class="inline-flex items-center justify-center self-center text-xs rounded-md px-2 py-1 cursor-pointer hover:underline"
-                      style="color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)'}">
+                      style="display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; border-radius: 0.375rem; padding: 0.25rem 0.5rem; cursor: pointer; color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)'}; border: none; line-height: 1;">
                       ${status.badge}
                     </button>
                   </div>
@@ -491,8 +490,7 @@ async function sendMessage() {
                 <div class="flex items-center gap-1.5 mb-2 flex-wrap">
                   <h2 class='text-base font-semibold'>${i + 1}. ${h.book}</h2>
                   <button onclick="alert('${status.explanation.replace(/'/g, "\\'")}')"
-                    class="inline-flex items-center justify-center self-center text-xs rounded-md px-2 py-1 cursor-pointer hover:underline"
-                    style="color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)'}">
+                    style="display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; border-radius: 0.375rem; padding: 0.25rem 0.5rem; cursor: pointer; color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)'}; border: none; line-height: 1;">
                     ${status.badge}
                   </button>
                 </div>
@@ -549,8 +547,7 @@ async function sendMessage() {
               <div class="flex items-center gap-1.5 mb-2 flex-wrap">
                 <h2 class='text-base font-semibold'>${i + 1}. ${h.book}</h2>
                 <button onclick="alert('${status.explanation.replace(/'/g, "\\'")}')"
-                  class="inline-flex items-center justify-center self-center text-xs rounded-md px-2 py-1 cursor-pointer hover:underline"
-                  style="color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)'}">
+                  style="display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; border-radius: 0.375rem; padding: 0.25rem 0.5rem; cursor: pointer; color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)'}; border: none; line-height: 1;">
                   ${status.badge}
                 </button>
               </div>              <div class="mb-2 text-xs">Lebih Lengkap: <a target="_blank" href="https://sunnah.com/searchDetail?q=${h.arab}" class="px-2 py-1 rounded-md hover:underline" style="color: #6b7280; background-color: rgba(107, 114, 128, 0.1);">sunnah.com</a> <a target="_blank" href="https://www.hadits.id/tentang/${h.arab}" class="px-2 py-1 rounded-md hover:underline" style="color: #6b7280; background-color: rgba(107, 114, 128, 0.1);">hadits.id</a></div>
