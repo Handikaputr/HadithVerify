@@ -214,7 +214,7 @@ Sunan an-Nasa'i
    Trigger: 
       - Ada kata kunci: "hadits", "hadith", "verifikasi", "cari hadits", "carikan hadits"
       - Atau user memberikan teks hadits (dalam bahasa Arab atau Indonesia)
-      - user menyebutkan hadist untuk verifikasi shahih atau tidaknya -> [seluruh text indonesianya atau kalimat pertama jika banyak [potongan murni tanpa imbuhan apapun seperti ... ]]
+      - user menyebutkan hadist untuk verifikasi shahih atau tidaknya -> [seluruh text indonesia/arab nya atau kalimat pertama jika banyak [potongan murni tanpa imbuhan apapun seperti ... ]]
     
    Output: 
       {
@@ -311,7 +311,7 @@ Sunan an-Nasa'i
    Trigger: 
       - Ada kata kunci: "hadits", "hadith", "verifikasi", "cari hadits", "carikan hadits"
       - Atau user memberikan teks hadits (dalam bahasa Arab atau Indonesia)
-      - user menyebutkan hadist untuk verifikasi shahih atau tidaknya -> [seluruh text indonesianya atau kalimat pertama jika banyak [potongan murni tanpa imbuhan apapun seperti ... ]]
+      - user menyebutkan hadist untuk verifikasi shahih atau tidaknya -> [seluruh text indonesia/arabnya atau kalimat pertama jika banyak [potongan murni tanpa imbuhan apapun seperti ... ]]
    Output: 
       {
         "type": "hadith_query",
