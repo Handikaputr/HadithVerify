@@ -16,7 +16,7 @@
             </div>
             <div>
               <h1 class="text-white font-bold text-lg tracking-wide">Hadith Verify</h1>
-              <p class="text-white/80 text-xs">Asisten Verifikasi Hadits</p>
+              <p class="text-white/80 text-xs">Asisten Pencari dan verivikasi Hadits</p>
             </div>
           </div>
 
@@ -55,7 +55,7 @@
           Assalamu'alaikum
         </h3>
         <p class="text-sm mb-6" :class="isDarkMode ? 'text-gray-400' : 'text-gray-600'">
-          Saya siap membantu Anda dalam verifikasi hadits.<br />Tanyakan apapun tentang keaslian hadits.
+          Saya siap membantu Anda dalam mencari dan verifikasi hadits.<br /> kami menyimpan data dari 6 kitab induk hadits (Kutubus Sittah).
         </p>
         <div class="flex flex-wrap gap-2 justify-center">
           <button @click="quickAsk('Apa itu hadits shahih?')"
@@ -280,10 +280,16 @@ DETECTION LOGIC
 1) INVALID - Tidak relevan dengan hadits
    Trigger: pesan umum, greeting, tidak ada topik hadits
    Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
-
+    
 2) HADITH_SEARCH - User mencari hadits berdasarkan kitab dan nomor
    Trigger: 
-      - Menyebutkan salah satu kitab (bukhari, muslim, abudawud, tirmidhi, nasai, ibnmajah, bulugh, nawawi, riyadh) dan angka nomor.
+      - Menyebutkan salah satu kitab (sahih-bukhari
+sahih-muslim
+al-tirmidhi
+abu-dawood
+ibn-e-majah
+sunan-nasai
+), penulisan nama kitab pada output sesuai daftar sebelumnya, jadi ketika user input nama kitab salah tulis sedikit maka benarkan. user input kitab dan angka nomor. jika user input kitab yang tidak ada pada daftar maka jangan maka respon invalid "kitab tidak temasuk dalam daftar 6 kitab induk hadits (Kutubus Sittah)".
    Output: 
       {
         "type": "hadith_search",
