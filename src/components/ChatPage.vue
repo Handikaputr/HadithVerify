@@ -548,7 +548,7 @@ async function sendMessage() {
     })
   } finally {
 
-
+    console.log(chatData.value);
 
     isLoading.value = false
     await nextTick()
