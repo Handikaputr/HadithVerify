@@ -196,12 +196,12 @@ DETECTION LOGIC
     
 2) HADITH_SEARCH - User mencari hadits berdasarkan kitab dan nomor
    Trigger: 
-      - Menyebutkan salah satu kitab (sahih-bukhari
-sahih-muslim
-al-tirmidhi
-abu-dawood
-ibn-e-majah
-sunan-nasai
+      - Menyebutkan salah satu kitab (Shahih al-Bukhari
+Shahih Muslim
+Jami' al-Tirmidzi
+Sunan Abu Dawud
+Sunan Ibnu Majah
+Sunan an-Nasa'i
 ), penulisan nama kitab pada output sesuai daftar sebelumnya, jadi ketika user input nama kitab salah tulis sedikit maka benarkan. user input kitab dan angka nomor. jika user input kitab yang tidak ada pada daftar maka jangan maka respon invalid "kitab tidak temasuk dalam daftar 6 kitab induk hadits (Kutubus Sittah)".
    Output: 
       {
@@ -244,16 +244,16 @@ User: "hadits tentang membunuh manusia"
 Output: {"type": "hadith_query", "query": "membunuh manusia", "answer": {"success": ["Berikut adalah hadits yang menyebutkan tentang membunuh manusia: ..."], "failed": ["Maaf, saya tidak menemukan hadits yang spesifik menyebutkan tentang membunuh manusia."]}}
 
 User: "cari hadits sahih al - bukhari nomor 25"  
-Output: {"type": "hadith_search", "book": "sahih-bukhari", "chapter": "25"} //chapter atau nomor
+Output: {"type": "hadith_search", "book": "Shahih al-Bukhari", "chapter": "25"} //chapter atau nomor
 
 User: "verifikasi: la ilaha illallah"
 Output: {"type": "hadith_query", "query": "la ilaha illallah", "answer": {"success": ["Berikut adalah hadits yang menyebutkan 'la ilaha illallah': ..."], "failed": ["Maaf, saya tidak menemukan hadits yang spesifik menyebutkan 'la ilaha illallah'."]}}
 
 User: "hadits bukhori 25"
-Output: {"type": "hadith_search", "book": "sahih-bukhari", "chapter": "25"}
+Output: {"type": "hadith_search", "book": "Shahih al-Bukhari", "chapter": "25"}
 
 User: "hadits muslim nomor 123"
-Output: {"type": "hadith_search", "book": "sahih-muslim", "chapter": "123"}
+Output: {"type": "hadith_search", "book": "Shahih Muslim", "chapter": "123"}
 
 User: "apa itu hadits shahih?"
 Output: {"type": "default", "message": "Hadits shahih adalah hadits yang memenuhi lima syarat: sanad bersambung, perawi adil, perawi dhabith, tidak syadz, dan tidak illat."}
@@ -291,12 +291,12 @@ DETECTION LOGIC
     
 2) HADITH_SEARCH - User mencari hadits berdasarkan kitab dan nomor
    Trigger: 
-      - Menyebutkan salah satu kitab (sahih-bukhari
-sahih-muslim
-al-tirmidhi
-abu-dawood
-ibn-e-majah
-sunan-nasai
+      - Menyebutkan salah satu kitab (Shahih al-Bukhari
+Shahih Muslim
+Jami' al-Tirmidzi
+Sunan Abu Dawud
+Sunan Ibnu Majah
+Sunan an-Nasa'i
 ), penulisan nama kitab pada output sesuai daftar sebelumnya, jadi ketika user input nama kitab salah tulis sedikit maka benarkan. user input kitab dan angka nomor. jika user input kitab yang tidak ada pada daftar maka jangan maka respon invalid "kitab tidak temasuk dalam daftar 6 kitab induk hadits (Kutubus Sittah)".
    Output: 
       {
@@ -339,16 +339,16 @@ User: "hadits tentang membunuh manusia"
 Output: {"type": "hadith_query", "query": "membunuh manusia", "answer": {"success": ["Berikut adalah hadits yang menyebutkan tentang membunuh manusia: ..."], "failed": ["Maaf, saya tidak menemukan hadits yang spesifik menyebutkan tentang membunuh manusia."]}}
 
 User: "cari hadits sahih al - bukhari nomor 25"  
-Output: {"type": "hadith_search", "book": "sahih-bukhari", "chapter": "25"} //chapter atau nomor
+Output: {"type": "hadith_search", "book": "Shahih al-Bukhari", "chapter": "25"} //chapter atau nomor
 
 User: "verifikasi: la ilaha illallah"
 Output: {"type": "hadith_query", "query": "la ilaha illallah", "answer": {"success": ["Berikut adalah hadits yang menyebutkan 'la ilaha illallah': ..."], "failed": ["Maaf, saya tidak menemukan hadits yang spesifik menyebutkan 'la ilaha illallah'."]}}
 
 User: "hadits bukhori 25"
-Output: {"type": "hadith_search", "book": "sahih-bukhari", "chapter": "25"}
+Output: {"type": "hadith_search", "book": "Shahih al-Bukhari", "chapter": "25"}
 
 User: "hadits muslim nomor 123"
-Output: {"type": "hadith_search", "book": "sahih-muslim", "chapter": "123"}
+Output: {"type": "hadith_search", "book": "Shahih Muslim", "chapter": "123"}
 
 User: "apa itu hadits shahih?"
 Output: {"type": "default", "message": "Hadits shahih adalah hadits yang memenuhi lima syarat: sanad bersambung, perawi adil, perawi dhabith, tidak syadz, dan tidak illat."}
@@ -487,39 +487,30 @@ async function sendMessage() {
 
     } else if (firstResponse.type === "hadith_search") {
       try {
-        // Call Vercel Edge Function /api/hadith
-        const params = new URLSearchParams({
-          book: firstResponse.book,
-          hadithNumber: firstResponse.chapter
-        });
-
-        const edgeUrl = `/api/hadith?${params.toString()}`;
-        console.log("Calling Hadith Edge Function:", edgeUrl);
+        // Call Edge Function untuk hadith book search
+        const edgeUrl = `/api/hadith-book?book=${encodeURIComponent(firstResponse.book)}&number=${encodeURIComponent(firstResponse.chapter)}`;
+        console.log("Calling Hadith Book Edge Function:", edgeUrl);
 
         const response = await axios.get(edgeUrl);
         console.log("Hadith Search Response:", response);
+        const data = response.data;
 
-        if (response.status === 200 && response.data.status === 200 && response.data.hadiths.data.length > 0) {
-          const hadithData = response.data.hadiths.data;
+        if (data) {
+          // Format sama seperti hadith_query
+          const hadithList = [data].map((h, i) =>
+            `<div class="mb-4 flex flex-col">
+              <h2 class='text-lg font-semibold'>${i + 1}. ${h.book}</h2>
+              <div class="mb-2 text-small">Lebih Lengkap: <a target="_blank" href="https://sunnah.com/searchDetail?q=${h.arab}">sunnah.com ✅</a> <a target="_blank" href="https://www.hadits.id/tentang/${h.arab}">hadits.id ✅</a></div>
+              <p class="text-bold text-end">${h.arab}</p>
+              <p class='italic'>"${h.indonesia}"</p>
+            </div>`
+          ).join('');
 
-          const hadithHTML = hadithData.map((h, i) => {
-            const arabicText = h.hadithArabic || '';
-            const indonesiaText = h.hadithUrdu || ''; // Atau gunakan field lain jika ada terjemahan Indonesia
-            const bookName = h.book.bookName || h.bookSlug;
-            const hadithNum = h.hadithNumber || '';
-
-            return `<div class="mb-4 flex flex-col">
-              <h2 class='text-lg font-semibold'>${i + 1}. ${bookName}</h2>
-              <div class="mb-2 text-small">Hadith #${hadithNum} | Status: ${h.status || '-'}</div>
-              <div class="mb-2 text-small">Lebih Lengkap: <a target="_blank" href="https://sunnah.com/${h.bookSlug}/${hadithNum}">sunnah.com ✅</a></div>
-              <p class="text-bold text-end">${arabicText}</p>
-              <p class='italic'>"${indonesiaText}"</p>
-            </div>`;
-          }).join('');
-
-          finalResponse = "Berikut adalah hadits yang Anda cari:\n\n" + hadithHTML;
-        } else {
+          finalResponse = "Berikut adalah hadits yang Anda cari:\n\n" + hadithList;
+        } else if (response.status === 404) {
           finalResponse = "Maaf, saya tidak dapat menemukan hadits yang sesuai.";
+        } else {
+          finalResponse = "Maaf, terjadi kesalahan saat mencari hadits.";
         }
       } catch (error) {
         console.error("Error fetching hadith search:", error);
