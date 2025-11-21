@@ -551,7 +551,7 @@ async function sendMessage() {
                   ${status.badge}
                 </button>
               </div>              <div class="mb-2 text-xs">Lebih Lengkap: <a target="_blank" href="https://sunnah.com/searchDetail?q=${h.arab}" class="px-2 py-1 rounded-md hover:underline" style="color: #6b7280; background-color: rgba(107, 114, 128, 0.1);">sunnah.com</a> <a target="_blank" href="https://www.hadits.id/tentang/${h.arab}" class="px-2 py-1 rounded-md hover:underline" style="color: #6b7280; background-color: rgba(107, 114, 128, 0.1);">hadits.id</a></div>
-              <p class="text-bold text-end">${h.arab}</p>
+              <p class="text-bold text-end mb-4">${h.arab}</p>
               <p class='italic'>"${h.indonesia}"</p>
             </div>`
           ).join('');
