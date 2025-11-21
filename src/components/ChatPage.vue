@@ -532,7 +532,7 @@ async function sendMessage() {
     } else if (firstResponse.type === "hadith_search") {
       try {
         // Call Edge Function untuk hadith book search
-        const edgeUrl = `/ api / hadith - book ? book = ${encodeURIComponent(firstResponse.book)}& number=${encodeURIComponent(firstResponse.chapter)} `;
+        const edgeUrl = `/api/hadith-book?book=${encodeURIComponent(firstResponse.book)}&number=${encodeURIComponent(firstResponse.chapter)}`;
         console.log("Calling Hadith Book Edge Function:", edgeUrl);
 
         const response = await axios.get(edgeUrl);
