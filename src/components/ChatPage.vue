@@ -469,12 +469,13 @@ async function sendMessage() {
 
           console.log("Formatted Hadith List:", hadithList);
 
+            chatData.value.push({
+            "role": "assistant",
+            "content": response.data
+          });
 
           finalResponse = firstResponse.answer.success.join('\n') + '\n\n' + hadithList;
-          chatData.value.push({
-            "role": "assistant",
-            "content": finalResponse
-          });
+        
         } else {
           finalResponse = firstResponse.answer.failed.join('\n');
         }
@@ -507,6 +508,10 @@ async function sendMessage() {
           ).join('');
 
           finalResponse = "Berikut adalah hadits yang Anda cari:\n\n" + hadithList;
+          chatData.value.push({
+            "role": "assistant",
+            "content": data
+          });
         } else if (response.status === 404) {
           finalResponse = "Maaf, saya tidak dapat menemukan hadits yang sesuai.";
         } else {
