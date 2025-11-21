@@ -552,11 +552,15 @@ async function sendMessage() {
                 <h2 class='text-base font-semibold'>${i + 1}. ${h.book}</h2>
                 
               </div>
+              <div>
+                
               <button onclick="alert('${status.explanation.replace(/'/g, "\\'")}')" 
                   class=" text-xs  rounded-sm w-fit h-8 text-center px-2 py-1 cursor-pointer"
                   style="color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)'};">
                   ${status.badge}
                 </button>
+                </div>
+              
               <div class="mb-2 text-xs">Lebih Lengkap: <a target="_blank" href="https://sunnah.com/searchDetail?q=${h.arab}" class="px-2 py-1 rounded-md hover:underline" style="color: #6b7280; background-color: rgba(107, 114, 128, 0.1);">sunnah.com</a> <a target="_blank" href="https://www.hadits.id/tentang/${h.arab}" class="px-2 py-1 rounded-md hover:underline" style="color: #6b7280; background-color: rgba(107, 114, 128, 0.1);">hadits.id</a></div>
               <p class="text-bold text-end">${h.arab}</p>
               <p class='italic'>"${h.indonesia}"</p>
