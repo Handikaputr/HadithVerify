@@ -194,7 +194,7 @@ DETECTION LOGIC
    Trigger: pesan umum, greeting, tidak ada topik hadits
    Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
     
-2) HADITH_SEARCH - User mencari hadits berdasarkan kitab dan nomor
+2) HADITH_SEARCH - User mencari hadits berdasarkan kitab dan nomor, user meminta untuk menjelaskan suatu hadist maka tetap masuk ini.
    Trigger: 
       - Menyebutkan salah satu kitab (Shahih al-Bukhari
 Shahih Muslim
@@ -289,7 +289,7 @@ DETECTION LOGIC
    Trigger: pesan umum, greeting, tidak ada topik hadits
    Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
     
-2) HADITH_SEARCH - User mencari hadits berdasarkan kitab dan nomor
+2) HADITH_SEARCH - User mencari hadits berdasarkan kitab dan nomor, user meminta untuk menjelaskan suatu hadist maka tetap masuk ini.
    Trigger: 
       - Menyebutkan salah satu kitab (Shahih al-Bukhari
 Shahih Muslim
