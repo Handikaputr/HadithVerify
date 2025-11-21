@@ -497,8 +497,11 @@ async function sendMessage() {
 
         const response = await axios.get(edgeUrl);
         console.log("Hadith Search Response:", response);
-
-        finalResponse = response.data; // Sesuaikan format response
+        if(response.status !== 200 || !response.data.status === 404) {
+                  finalResponse = "Maaf, saya tidak dapat menemukan hadits yang sesuai.";
+        }else{
+          
+        }
       } catch (error) {
         console.error("Error fetching hadith search:", error);
         finalResponse = "Terjadi kesalahan saat mencari hadits berdasarkan kitab dan nomor.";
