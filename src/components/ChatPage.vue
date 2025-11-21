@@ -548,9 +548,9 @@ async function sendMessage() {
             `<div class="mb-4 flex flex-col">
               <div class="flex items-center gap-1.5 mb-2 flex-wrap">
                 <h2 class='text-base font-semibold'>${i + 1}. ${h.book}</h2>
-                <button onclick="alert('${status.explanation.replace(/'/g, "\\'")}')"
-                  class="px-1.5 py-0.5 text-[10px] rounded-full border hover:bg-opacity-30 transition-all cursor-pointer"
-                  style="color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(234, 179, 8, 0.15)'}; border-color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; border-width: 1px;">
+                <button onclick="alert('${status.explanation.replace(/'/g, "\\'")}')" 
+                  class="px-2 py-1 text-[10px] rounded-md hover:underline cursor-pointer"
+                  style="color: #6b7280; background-color: rgba(107, 114, 128, 0.1);">
                   ${status.badge}
                 </button>
               </div>
@@ -558,9 +558,7 @@ async function sendMessage() {
               <p class="text-bold text-end">${h.arab}</p>
               <p class='italic'>"${h.indonesia}"</p>
             </div>`
-          ).join('');
-
-          // Format plain text untuk AI context
+          ).join('');          // Format plain text untuk AI context
           const plainTextForAI = `hadist : ${data.book} (${data.number})\nArab: ${data.arab}\nIndonesia: ${data.indonesia}`;
 
           chatData.value.push({
