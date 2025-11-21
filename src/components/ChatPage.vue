@@ -548,12 +548,13 @@ async function sendMessage() {
     })
   } finally {
 
-    console.log(chatData.value);
 
     isLoading.value = false
     await nextTick()
     scrollToBottom()
   }
+    console.log(chatData.value);
+
 }
 
 function scrollToBottom() {
