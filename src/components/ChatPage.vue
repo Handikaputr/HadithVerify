@@ -310,7 +310,7 @@ Sunan an-Nasa'i
    Trigger: 
       - Ada kata kunci: "hadits", "hadith", "verifikasi", "cari hadits", "carikan hadits"
       - Atau user memberikan teks hadits (dalam bahasa Arab atau Indonesia)
-      - user menyebutkan hadist untuk verifikasi shahih atau tidaknya -> [ambil sebgaian pokok text untuk di cari]
+      - user menyebutkan hadist untuk verifikasi shahih atau tidaknya -> [ambil sebgaian pokok text untuk di cari (bagian awal atau akhir - jangan potong text di tengah-tengah, harus lengkap satu kalimat atau frasa karena pencarian menggunakan metode pencocokan teks)]
    Output: 
       {
         "type": "hadith_query",
