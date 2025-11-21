@@ -330,11 +330,11 @@ Output: {"type": "hadith_search", "book": "bukhari", "chapter": "25"} //chapter 
 User: "verifikasi: la ilaha illallah"
 Output: {"type": "hadith_query", "query": "la ilaha illallah", "answer": {"success": ["Berikut adalah hadits yang menyebutkan 'la ilaha illallah': ..."], "failed": ["Maaf, saya tidak menemukan hadits yang spesifik menyebutkan 'la ilaha illallah'."]}}
 
-User: "hadits bukhari 25"
-Output: {"type": "hadith_search", "search": "bukhari:25"}
+User: "hadits bukhori 25"
+Output: {"type": "hadith_search", "book": "bukhari", "chapter": "25"}
 
 User: "hadits muslim nomor 123"
-Output: {"type": "hadith_search", "search": "muslim:123"}
+Output: {"type": "hadith_search", "book": "muslim", "chapter": "123"}
 
 User: "apa itu hadits shahih?"
 Output: {"type": "default", "message": "Hadits shahih adalah hadits yang memenuhi lima syarat: sanad bersambung, perawi adil, perawi dhabith, tidak syadz, dan tidak illat."}
