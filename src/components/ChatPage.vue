@@ -55,7 +55,8 @@
           Assalamu'alaikum
         </h3>
         <p class="text-sm mb-6" :class="isDarkMode ? 'text-gray-400' : 'text-gray-600'">
-          Saya siap membantu Anda dalam mencari dan verifikasi hadits.<br /> kami menyimpan data dari 6 kitab induk hadits (Kutubus Sittah).
+          Saya siap membantu Anda dalam mencari dan verifikasi hadits.<br /> kami menyimpan data dari 6 kitab induk
+          hadits (Kutubus Sittah).
         </p>
         <div class="flex flex-wrap gap-2 justify-center">
           <button @click="quickAsk('Apa itu hadits shahih?')"
@@ -182,9 +183,9 @@ const messagesContainer = ref(null)
 const isDarkMode = ref(true)
 const isLoading = ref(false)
 const chatData = ref([
-    {
-      "role": "system",
-      "content": `You are a Hadith Query Analyzer. Output ONLY valid JSON.
+  {
+    "role": "system",
+    "content": `You are a Hadith Query Analyzer. Output ONLY valid JSON.
 
 =================================================================
 DETECTION LOGIC
@@ -260,8 +261,8 @@ Output: {"type": "default", "message": "Hadits shahih adalah hadits yang memenuh
 User: "halo"
 Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
 `
-    }
-  ])
+  }
+])
 
 // Groq API setup
 const groq = new Groq({
@@ -497,10 +498,28 @@ async function sendMessage() {
 
         const response = await axios.get(edgeUrl);
         console.log("Hadith Search Response:", response);
-        if(response.status !== 200 || !response.data.status === 404) {
-                  finalResponse = "Maaf, saya tidak dapat menemukan hadits yang sesuai.";
-        }else{
-          
+
+        if (response.status === 200 && response.data.status === 200 && response.data.hadiths.data.length > 0) {
+          const hadithData = response.data.hadiths.data;
+
+          const hadithHTML = hadithData.map((h, i) => {
+            const arabicText = h.hadithArabic || '';
+            const indonesiaText = h.hadithUrdu || ''; // Atau gunakan field lain jika ada terjemahan Indonesia
+            const bookName = h.book.bookName || h.bookSlug;
+            const hadithNum = h.hadithNumber || '';
+
+            return `<div class="mb-4 flex flex-col">
+              <h2 class='text-lg font-semibold'>${i + 1}. ${bookName}</h2>
+              <div class="mb-2 text-small">Hadith #${hadithNum} | Status: ${h.status || '-'}</div>
+              <div class="mb-2 text-small">Lebih Lengkap: <a target="_blank" href="https://sunnah.com/${h.bookSlug}/${hadithNum}">sunnah.com ✅</a></div>
+              <p class="text-bold text-end">${arabicText}</p>
+              <p class='italic'>"${indonesiaText}"</p>
+            </div>`;
+          }).join('');
+
+          finalResponse = "Berikut adalah hadits yang Anda cari:\n\n" + hadithHTML;
+        } else {
+          finalResponse = "Maaf, saya tidak dapat menemukan hadits yang sesuai.";
         }
       } catch (error) {
         console.error("Error fetching hadith search:", error);
