@@ -205,7 +205,7 @@ sunan-nasai
    Output: 
       {
         "type": "hadith_search",
-        "search": "kitab",
+        "book": "kitab",
         "chapter": "nomor"
       }
 
@@ -300,7 +300,7 @@ sunan-nasai
    Output: 
       {
         "type": "hadith_search",
-        "search": "kitab",
+        "book": "kitab",
         "chapter": "nomor"
       }
 
