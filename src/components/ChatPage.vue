@@ -183,9 +183,9 @@ const messagesContainer = ref(null)
 const isDarkMode = ref(true)
 const isLoading = ref(false)
 const chatData = ref([
-  {
-    "role": "system",
-    "content": `You are a Hadith Query Analyzer. Output ONLY valid JSON.
+    {
+      "role": "system",
+      "content": `You are a Hadith Query Analyzer. Output ONLY valid JSON.
 
 =================================================================
 DETECTION LOGIC
@@ -194,7 +194,7 @@ DETECTION LOGIC
    Trigger: pesan umum, greeting, tidak ada topik hadits
    Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
     
-2) HADITH_SEARCH - User mencari hadits berdasarkan kitab dan nomor, user meminta untuk menjelaskan suatu hadist maka tetap masuk ini.
+2) HADITH_SEARCH - User mencari hadits berdasarkan kitab dan nomor, user meminta untuk menjelaskan suatu hadist  maka tetap masuk ini.
    Trigger: 
       - Menyebutkan salah satu kitab (Shahih al-Bukhari
 Shahih Muslim
@@ -214,13 +214,14 @@ Sunan an-Nasa'i
    Trigger: 
       - Ada kata kunci: "hadits", "hadith", "verifikasi", "cari hadits", "carikan hadits"
       - Atau user memberikan teks hadits (dalam bahasa Arab atau Indonesia)
+      - user menyebutkan hadist untuk verifikasi shahih atau tidaknya -> [ambil sebgaian pokok text untuk di cari]
    Output: 
       {
         "type": "hadith_query",
         "query": "kata kunci atau teks hadits yang dicari",
         "answer": {
           "succes": [jawaban ketika hadist ditemukan],
-          "failed": [jawaban ketika hadist tidak ditemukan - ['Maaf, saya tidak menemukan hadits yang spesifik menyebutkan ...']]
+          "failed": [jawaban ketika hadist tidak ditemukan - ['Maaf, saya tidak menemukan hadits yang spesifik menyebutkan ...' , 'Maaf, saya tidak menemukan hadits yang sesuai dengan teks yang Anda berikan di 6 kitab induk hadits (Kutubus Sittah). Hadits ini tidak dapat kami verifikasi keasliannya atau belum pasti']]
         }
       }
 
@@ -261,8 +262,8 @@ Output: {"type": "default", "message": "Hadits shahih adalah hadits yang memenuh
 User: "halo"
 Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
 `
-  }
-])
+    }
+  ])
 
 // Groq API setup
 const groq = new Groq({
@@ -289,7 +290,7 @@ DETECTION LOGIC
    Trigger: pesan umum, greeting, tidak ada topik hadits
    Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
     
-2) HADITH_SEARCH - User mencari hadits berdasarkan kitab dan nomor, user meminta untuk menjelaskan suatu hadist maka tetap masuk ini.
+2) HADITH_SEARCH - User mencari hadits berdasarkan kitab dan nomor, user meminta untuk menjelaskan suatu hadist  maka tetap masuk ini.
    Trigger: 
       - Menyebutkan salah satu kitab (Shahih al-Bukhari
 Shahih Muslim
@@ -309,13 +310,14 @@ Sunan an-Nasa'i
    Trigger: 
       - Ada kata kunci: "hadits", "hadith", "verifikasi", "cari hadits", "carikan hadits"
       - Atau user memberikan teks hadits (dalam bahasa Arab atau Indonesia)
+      - user menyebutkan hadist untuk verifikasi shahih atau tidaknya -> [ambil sebgaian pokok text untuk di cari]
    Output: 
       {
         "type": "hadith_query",
         "query": "kata kunci atau teks hadits yang dicari",
         "answer": {
           "succes": [jawaban ketika hadist ditemukan],
-          "failed": [jawaban ketika hadist tidak ditemukan - ['Maaf, saya tidak menemukan hadits yang spesifik menyebutkan ...']]
+          "failed": [jawaban ketika hadist tidak ditemukan - ['Maaf, saya tidak menemukan hadits yang spesifik menyebutkan ...' , 'Maaf, saya tidak menemukan hadits yang sesuai dengan teks yang Anda berikan di 6 kitab induk hadits (Kutubus Sittah). Hadits ini tidak dapat kami verifikasi keasliannya atau belum pasti']]
         }
       }
 
@@ -429,7 +431,7 @@ async function sendMessage() {
 
 
         //  kondisi pertama - berkaitan dengan hadith
-        if (data) {
+        if (data != null && data.length > 0) {
           let hadithList = data.map((h, i) =>
             `${i + 1}. ${h.arab}\n - ${h.book} : ${h.number}\n - ${h.indonesia}`
           ).join('\n');
@@ -513,7 +515,7 @@ async function sendMessage() {
             "content": data
           });
         } else if (response.status === 404) {
-          finalResponse = "Maaf, saya tidak dapat menemukan hadits yang sesuai.";
+          finalResponse = "Maaf, saya tidak dapat menemukan hadits yang sesuai ";
         } else {
           finalResponse = "Maaf, terjadi kesalahan saat mencari hadits.";
         }
