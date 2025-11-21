@@ -183,9 +183,9 @@ const messagesContainer = ref(null)
 const isDarkMode = ref(true)
 const isLoading = ref(false)
 const chatData = ref([
-    {
-      "role": "system",
-      "content": `You are a Hadith Query Analyzer. Output ONLY valid JSON.
+  {
+    "role": "system",
+    "content": `You are a Hadith Query Analyzer. Output ONLY valid JSON.
 
 =================================================================
 DETECTION LOGIC
@@ -262,8 +262,8 @@ Output: {"type": "default", "message": "Hadits shahih adalah hadits yang memenuh
 User: "halo"
 Output: {"type": "invalid", "message": "Mohon sebutkan topik hadits yang ingin dicari"}
 `
-    }
-  ])
+  }
+])
 
 // Groq API setup
 const groq = new Groq({
@@ -428,7 +428,8 @@ async function sendMessage() {
         const response = await axios.get(edgeUrl);
         console.log("Hadith API Response:", response);
         const data = response.data;
-
+       
+        
 
         //  kondisi pertama - berkaitan dengan hadith
         if (data != null && data.length > 0) {
@@ -471,15 +472,24 @@ async function sendMessage() {
 
           console.log("Formatted Hadith List:", hadithList);
 
-            chatData.value.push({
+          // Format plain text untuk AI context
+          const plainTextForAI = data.map((h, i) =>
+            `${i + 1}. ${h.book} (${h.number})\nArab: ${h.arab}\nIndonesia: ${h.indonesia}`
+          ).join('\n\n');
+
+          chatData.value.push({
             "role": "assistant",
-            "content": response.data
+            "content": firstResponse.answer.success.join('\n') + '\n\n' + plainTextForAI
           });
 
           finalResponse = firstResponse.answer.success.join('\n') + '\n\n' + hadithList;
-        
+
         } else {
           finalResponse = firstResponse.answer.failed.join('\n');
+          chatData.value.push({
+            "role": "assistant",
+            "content": firstResponse.answer.failed.join('\n')
+          });
         }
 
       } catch (error) {
@@ -509,11 +519,15 @@ async function sendMessage() {
             </div>`
           ).join('');
 
-          finalResponse = "Berikut adalah hadits yang Anda cari:\n\n" + hadithList;
+          // Format plain text untuk AI context
+          const plainTextForAI = `hadist : ${data.book} (${data.number})\nArab: ${data.arab}\nIndonesia: ${data.indonesia}`;
+
           chatData.value.push({
             "role": "assistant",
-            "content": finalResponse
+            "content": "Berikut adalah hadits yang Anda cari:\n\n" + plainTextForAI
           });
+
+          finalResponse = "Berikut adalah hadits yang Anda cari:\n\n" + hadithList;
         } else if (response.status === 404) {
           finalResponse = "Maaf, saya tidak dapat menemukan hadits yang sesuai ";
         } else {
@@ -560,7 +574,7 @@ async function sendMessage() {
     await nextTick()
     scrollToBottom()
   }
-    console.log(chatData.value);
+  console.log(chatData.value);
 
 }
 
