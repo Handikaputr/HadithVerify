@@ -428,9 +428,16 @@ async function sendMessage() {
 
         const response = await axios.get(edgeUrl);
         console.log("Hadith API Response:", response);
-        const data = response.data;
-       
-        
+        let data = response.data;
+
+        // Sort data berdasarkan panjang teks (prioritaskan yang pendek)
+        if (data && data.length > 0) {
+          data = data.sort((a, b) => {
+            const lengthA = (a.arab || '').length + (a.indonesia || '').length;
+            const lengthB = (b.arab || '').length + (b.indonesia || '').length;
+            return lengthA - lengthB;
+          });
+        }
 
         //  kondisi pertama - berkaitan dengan hadith
         if (data != null && data.length > 0) {
