@@ -470,15 +470,15 @@ async function sendMessage() {
                   <div class="flex items-center gap-1.5 mb-2 flex-wrap">
                     <h2 class='text-base font-semibold'>${i + 1}. ${h.book}</h2>
                     <button onclick="alert('${status.explanation.replace(/'/g, "\\'")}')" 
-                      class="px-1.5 py-0.5 text-[10px] rounded-full border hover:bg-opacity-30 transition-all cursor-pointer"
-                      style="color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(234, 179, 8, 0.15)'}; border-color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; border-width: 1px;">
+                      class="px-2 py-1 text-xs rounded-md hover:underline cursor-pointer"
+                      style="color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)'};">
                       ${status.badge}
                     </button>
                   </div>
 <div class="mb-2 text-xs"> Lebih Lengkap : <a target="_blank" href="https://sunnah.com/search?q=${h.arab}" class="px-2 py-1 rounded-md hover:underline" style="color: #6b7280; background-color: rgba(107, 114, 128, 0.1);">sunnah.com</a> <a target="_blank" href="https://www.hadits.id/tentang/${h.arab}" class="px-2 py-1 rounded-md hover:underline" style="color: #6b7280; background-color: rgba(107, 114, 128, 0.1);">hadits.id</a></div>
 <p class="text-bold text-end mb-4">${h.arab}</p>
 <p class='italic'>"${h.indonesia}"</p>
-                  </div>`;
+                  </div > `;
               }).join(''); if (hadithList.length <= maxChars) break;
               truncatedData.pop(); // Hapus element terakhir
             }
@@ -490,16 +490,16 @@ async function sendMessage() {
               return `<div class="mb-4 flex flex-col">
                 <div class="flex items-center gap-1.5 mb-2 flex-wrap">
                   <h2 class='text-base font-semibold'>${i + 1}. ${h.book}</h2>
-                  <button onclick="alert('${status.explanation.replace(/'/g, "\\'")}')"
-                    class="px-1.5 py-0.5 text-[10px] rounded-full border hover:bg-opacity-30 transition-all cursor-pointer"
-                    style="color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(234, 179, 8, 0.15)'}; border-color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; border-width: 1px;">
+                  <button onclick="alert('${status.explanation.replace(/'/g, "\\'")}')" 
+                    class="px-2 py-1 text-xs rounded-md hover:underline cursor-pointer"
+                    style="color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)'};">
                     ${status.badge}
                   </button>
                 </div>
 <div class="mb-2 text-xs"> Lebih Lengkap : <a target="_blank" href="https://sunnah.com/search?q=${h.arab}" class="px-2 py-1 rounded-md hover:underline" style="color: #6b7280; background-color: rgba(107, 114, 128, 0.1);">sunnah.com</a> <a target="_blank" href="https://www.hadits.id/tentang/${h.arab}" class="px-2 py-1 rounded-md hover:underline" style="color: #6b7280; background-color: rgba(107, 114, 128, 0.1);">hadits.id</a></div>
 <p class="text-bold text-end mb-4">${h.arab}</p>
 <p class='italic'>"${h.indonesia}"</p>
-                </div>`;
+                </div > `;
             }).join('');
           }
 
@@ -507,7 +507,7 @@ async function sendMessage() {
 
           // Format plain text untuk AI context
           const plainTextForAI = data.map((h, i) =>
-            `${i + 1}. ${h.book} (${h.number})\nArab: ${h.arab}\nIndonesia: ${h.indonesia}`
+            `${i + 1}. ${h.book} (${h.number}) \nArab: ${h.arab} \nIndonesia: ${h.indonesia} `
           ).join('\n\n');
 
           chatData.value.push({
@@ -534,7 +534,7 @@ async function sendMessage() {
     } else if (firstResponse.type === "hadith_search") {
       try {
         // Call Edge Function untuk hadith book search
-        const edgeUrl = `/api/hadith-book?book=${encodeURIComponent(firstResponse.book)}&number=${encodeURIComponent(firstResponse.chapter)}`;
+        const edgeUrl = `/ api / hadith - book ? book = ${encodeURIComponent(firstResponse.book)}& number=${encodeURIComponent(firstResponse.chapter)} `;
         console.log("Calling Hadith Book Edge Function:", edgeUrl);
 
         const response = await axios.get(edgeUrl);
@@ -549,8 +549,8 @@ async function sendMessage() {
               <div class="flex items-center gap-1.5 mb-2 flex-wrap">
                 <h2 class='text-base font-semibold'>${i + 1}. ${h.book}</h2>
                 <button onclick="alert('${status.explanation.replace(/'/g, "\\'")}')" 
-                  class="px-1.5 py-0.5 text-[10px] rounded-full border hover:bg-opacity-30 transition-all cursor-pointer"
-                  style="color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(234, 179, 8, 0.15)'}; border-color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; border-width: 1px;">
+                  class="px-2 py-1 text-xs rounded-md hover:underline cursor-pointer"
+                  style="color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)'};">
                   ${status.badge}
                 </button>
               </div>
@@ -558,8 +558,10 @@ async function sendMessage() {
               <p class="text-bold text-end">${h.arab}</p>
               <p class='italic'>"${h.indonesia}"</p>
             </div>`
-          ).join('');          // Format plain text untuk AI context
-          const plainTextForAI = `hadist : ${data.book} (${data.number})\nArab: ${data.arab}\nIndonesia: ${data.indonesia}`;
+          ).join('');
+
+          // Format plain text untuk AI context
+          const plainTextForAI = `hadist: ${data.book} (${data.number})\nArab: ${data.arab}\nIndonesia: ${data.indonesia}`;
 
           chatData.value.push({
             "role": "assistant",
