@@ -450,7 +450,7 @@ async function sendMessage() {
                 `<div class="mb-4 flex flex-col">
                   <h2 class='text-lg font-semibold'>${i + 1}. ${h.book}</h2>
 <div class="mb-2 text-small"> Lebih Lengkap : <a target="_blank" href="https://sunnah.com/search?q=${h.arab}">sunnah.com ✅</a> <a target="_blank" href="https://www.hadits.id/tentang/${h.arab}">hadits.id ✅</a></div>
-<p class="text-bold text-end">${h.arab}</p>
+<p class="text-bold text-end mb-4">${h.arab}</p>
 <p class='italic'>"${h.indonesia}"</p>
                   </div>`
               ).join('');
@@ -465,7 +465,7 @@ async function sendMessage() {
               `<div class="mb-4 flex flex-col">
                 <h2 class='text-lg font-semibold'>${i + 1}. ${h.book}</h2>
 <div class="mb-2 text-small"> Lebih Lengkap : <a target="_blank" href="https://sunnah.com/search?q=${h.arab}">sunnah.com ✅</a> <a target="_blank" href="https://www.hadits.id/tentang/${h.arab}">hadits.id ✅</a></div>
-<p class="text-bold text-end">${h.arab}</p>
+<p class="text-bold text-end mb-4">${h.arab}</p>
 <p class='italic'>"${h.indonesia}"</p>
                 </div>`
             ).join('');
