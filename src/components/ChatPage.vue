@@ -472,7 +472,7 @@ async function sendMessage() {
                     
                   </div>
                   <button onclick="alert('${status.explanation.replace(/'/g, "\\'")}')" 
-                      class="w-fit h-fit px-2 py-1 text-xs rounded-sm  cursor-pointer"
+                      class="w-fit h-8 text-center px-2 py-1 text-xs rounded-sm  cursor-pointer"
                       style="color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)'};">
                       ${status.badge}
                     </button>
@@ -494,7 +494,7 @@ async function sendMessage() {
                   
                 </div>
                 <button onclick="alert('${status.explanation.replace(/'/g, "\\'")}')" 
-                    class=" w-fit h-fit px-2 py-1 text-xs rounded-sm cursor-pointer"
+                    class=" w-fit h-8 text-center px-2 py-1 text-xs rounded-sm cursor-pointer"
                     style="color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)'};">
                     ${status.badge}
                   </button>
@@ -553,7 +553,7 @@ async function sendMessage() {
                 
               </div>
               <button onclick="alert('${status.explanation.replace(/'/g, "\\'")}')" 
-                  class=" text-xs rounded-sm w-fit h-fit px-2 py-1 cursor-pointer"
+                  class=" text-xs  rounded-sm w-fit h-8 text-center px-2 py-1 cursor-pointer"
                   style="color: ${status.color === 'bg-green-500' ? '#10b981' : '#eab308'}; background-color: ${status.color === 'bg-green-500' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)'};">
                   ${status.badge}
                 </button>
