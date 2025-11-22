@@ -545,7 +545,7 @@ async function sendMessage() {
     } else if (firstResponse.type === "hadith_search") {
       try {
         // Call Edge Function untuk hadith book search
-        const edgeUrl = `https://hadith-api-wine.vercel.app/api/searchDetail?book=${encodeURIComponent(firstResponse.book)}&number=${encodeURIComponent(firstResponse.number)}`;
+        const edgeUrl = `https://hadith-api-wine.vercel.app/api/searchDetail?book=${encodeURIComponent(firstResponse.book)}&number=${encodeURIComponent(firstResponse.chapter)}`;
 
         const response = await axios.get(edgeUrl);
         console.log("Hadith Search Response:", response);
