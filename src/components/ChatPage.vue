@@ -215,6 +215,7 @@ Sunan an-Nasa'i
    Trigger: 
       - Ada kata kunci: "hadits", "hadith", "verifikasi", "cari hadits", "carikan hadits"
       - Atau user memberikan teks hadits (dalam bahasa Arab atau Indonesia)
+      - kamu hanya bertugas memberikan output yang diminta, kamu tidak boleh memberikan hadits secara langsung
       - user menyebutkan hadist untuk verifikasi shahih atau tidaknya -> [seluruh text indonesia/arabnya atau kalimat pertama jika banyak [potongan murni tanpa imbuhan apapun seperti ... ]]
    Output: 
       {
@@ -222,7 +223,7 @@ Sunan an-Nasa'i
         "query": "kata kunci atau teks hadits yang dicari",
         "book": [jika user meminta hadist dari kitab tertentu - format penulisan kitab seperti nomor 2 - jika banyak dipisah dengan ","]
         "answer": {
-          "succes": [jawaban ketika hadist ditemukan, jika betarnya shahih atau tidaknya - ['hadist ini memiliki derajat yang tinggi' (jangan secara langsung menyebut shahih)],)],
+          "succes": [jawaban ketika hadist ditemukan, jika betarnya shahih atau tidaknya - ['hadist ini memiliki derajat yang tinggi' (jangan secara langsung menyebut shahih)],)] - jangan memberikah hadist,
           "failed": [jawaban ketika hadist tidak ditemukan - ['Maaf, saya tidak menemukan hadits yang spesifik menyebutkan ...' , 'Maaf, saya tidak menemukan hadits yang sesuai dengan teks yang Anda berikan di 6 kitab induk hadits (Kutubus Sittah). Hadits ini tidak dapat kami verifikasi keasliannya atau belum pasti']]
         }
       }
@@ -313,6 +314,7 @@ Sunan an-Nasa'i
    Trigger: 
       - Ada kata kunci: "hadits", "hadith", "verifikasi", "cari hadits", "carikan hadits"
       - Atau user memberikan teks hadits (dalam bahasa Arab atau Indonesia)
+      - kamu hanya bertugas memberikan output yang diminta, kamu tidak boleh memberikan hadits secara langsung
       - user menyebutkan hadist untuk verifikasi shahih atau tidaknya -> [seluruh text indonesia/arabnya atau kalimat pertama jika banyak [potongan murni tanpa imbuhan apapun seperti ... ]]
    Output: 
       {
@@ -320,7 +322,7 @@ Sunan an-Nasa'i
         "query": "kata kunci atau teks hadits yang dicari",
         "book": [jika user meminta hadist dari kitab tertentu - format penulisan kitab seperti nomor 2 - jika banyak dipisah dengan ","]
         "answer": {
-          "succes": [jawaban ketika hadist ditemukan, jika betarnya shahih atau tidaknya - ['hadist ini memiliki derajat yang tinggi' (jangan secara langsung menyebut shahih)],)],
+          "succes": [jawaban ketika hadist ditemukan, jika betarnya shahih atau tidaknya - ['hadist ini memiliki derajat yang tinggi' (jangan secara langsung menyebut shahih)],)] - jangan memberikah hadist,
           "failed": [jawaban ketika hadist tidak ditemukan - ['Maaf, saya tidak menemukan hadits yang spesifik menyebutkan ...' , 'Maaf, saya tidak menemukan hadits yang sesuai dengan teks yang Anda berikan di 6 kitab induk hadits (Kutubus Sittah). Hadits ini tidak dapat kami verifikasi keasliannya atau belum pasti']]
         }
       }
@@ -579,7 +581,7 @@ async function sendMessage() {
             // Tambahkan prompt untuk AI agar merespons sesuai pertanyaan user
             chatData.value.push({
               "role": "user",
-              "content": "Berdasarkan hadits di atas, berikan penjelasan sesuai pertanyaan saya sebelumnya. Jawab dengan singkat dan jelas."
+              "content": "Berdasarkan hadits di atas, berikan kelanjutan jawaban sesuai pertanyaan saya sebelumnya. Jawab dengan singkat dan jelas."
             });
 
             // Panggil AI lagi untuk mendapat respons tambahan
@@ -593,14 +595,14 @@ async function sendMessage() {
               "stop": null
             });
 
-            const aiResponse = secondCompletion.choices[0].message.content;
+            const aiResponse = JSON.parse(secondCompletion.choices[0].message.content);
 
             chatData.value.push({
               "role": "assistant",
-              "content": aiResponse
+              "content": aiResponse.answer.success
             });
 
-            finalResponse = hadithList + `\n\n<div class="mt-4 p-3 bg-gray-50 rounded-lg text-sm">${aiResponse}</div>`;
+            finalResponse = hadithList + `\n\n<div class="mt-4 p-3 bg-gray-50 rounded-lg text-sm">${aiResponse.answer.success}</div>`;
           } else {
             // Jika reason false, hanya tampilkan hadits
             chatData.value.push({
