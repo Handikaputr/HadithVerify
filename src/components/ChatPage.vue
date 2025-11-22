@@ -443,8 +443,18 @@ async function sendMessage() {
     if (firstResponse.type === "hadith_query") {
       try {
         // Call Vercel Edge Function instead of direct API
-        const maxResults = firstResponse.max || 3;
-        const edgeUrl = `https://hadith-api-wine.vercel.app/api/search?q=${firstResponse.query.toString()}&max=${maxResults}`;
+        const query = new URLSearchParams();
+
+        
+          let edgeUrl = `https://hadith-api-wine.vercel.app/api/search?q=${encodeURIComponent(firstResponse.query)}&max=3`;
+
+        // Tambahkan parameter book jika ada
+        if (firstResponse.book && firstResponse.book.length > 0) {
+          const bookParam = Array.isArray(firstResponse.book)
+            ? firstResponse.book.join(',')
+            : firstResponse.book;
+          edgeUrl += `&book=${encodeURIComponent(bookParam)}`;
+        }
         console.log("Calling Edge Function:", edgeUrl);
 
         const response = await axios.get(edgeUrl);
@@ -535,16 +545,7 @@ async function sendMessage() {
     } else if (firstResponse.type === "hadith_search") {
       try {
         // Call Edge Function untuk hadith book search
-        const maxResults = firstResponse.max || 3;
-        let edgeUrl = `https://hadith-api-wine.vercel.app/api/search?q=${encodeURIComponent(firstResponse.query)}&max=${maxResults}`;
-
-        // Tambahkan parameter book jika ada
-        if (firstResponse.book && firstResponse.book.length > 0) {
-          const bookParam = Array.isArray(firstResponse.book)
-            ? firstResponse.book.join(',')
-            : firstResponse.book;
-          edgeUrl += `&book=${encodeURIComponent(bookParam)}`;
-        }
+        const edgeUrl = `https://hadith-api-wine.vercel.app/api/searchDetail?book=${encodeURIComponent(firstResponse.book)}&number=${encodeURIComponent(firstResponse.number)}`;
 
         const response = await axios.get(edgeUrl);
         console.log("Hadith Search Response:", response);
