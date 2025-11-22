@@ -220,6 +220,7 @@ Sunan an-Nasa'i
       {
         "type": "hadith_query",
         "query": "kata kunci atau teks hadits yang dicari",
+        "max"=1, //jika berkaitan verifikasi shahih atau tidaknya, selain itu hapus properti ini
         "book": [jika user meminta hadist dari kitab tertentu - format penulisan kitab seperti nomor 2 - jika banyak dipisah dengan ","]
         "answer": {
           "succes": [jawaban ketika hadist ditemukan, jika betarnya shahih atau tidaknya - ['hadist ini memiliki derajat yang tinggi' (jangan secara langsung menyebut shahih)],)],
@@ -318,6 +319,7 @@ Sunan an-Nasa'i
       {
         "type": "hadith_query",
         "query": "kata kunci atau teks hadits yang dicari",
+        "max"=1, //jika berkaitan verifikasi shahih atau tidaknya, selain itu hapus properti ini
         "book": [jika user meminta hadist dari kitab tertentu - format penulisan kitab seperti nomor 2 - jika banyak dipisah dengan ","]
         "answer": {
           "succes": [jawaban ketika hadist ditemukan, jika betarnya shahih atau tidaknya - ['hadist ini memiliki derajat yang tinggi' (jangan secara langsung menyebut shahih)],)],
@@ -348,7 +350,7 @@ User: "cari hadits sahih al - bukhari nomor 25"
 Output: {"type": "hadith_search", "book": "Shahih al-Bukhari", "chapter": "25"} //chapter atau nomor
 
 User: "verifikasi: la ilaha illallah"
-Output: {"type": "hadith_query", "query": "la ilaha illallah", "answer": {"success": ["Berikut adalah hadits yang menyebutkan 'la ilaha illallah': ..."], "failed": ["Maaf, saya tidak menemukan hadits yang spesifik menyebutkan 'la ilaha illallah'."]}}
+Output: {"type": "hadith_query", "query": "la ilaha illallah", "max"=1, "answer": {"success": ["Berikut adalah hadits yang menyebutkan 'la ilaha illallah': ..."], "failed": ["Maaf, saya tidak menemukan hadits yang spesifik menyebutkan 'la ilaha illallah'."]}}
 
 User: "hadits bukhori 25"
 Output: {"type": "hadith_search", "book": "Shahih al-Bukhari", "chapter": "25"}
@@ -441,10 +443,8 @@ async function sendMessage() {
     if (firstResponse.type === "hadith_query") {
       try {
         // Call Vercel Edge Function instead of direct API
-        const query = new URLSearchParams();
-
-
-        const edgeUrl = `https://hadith-api-wine.vercel.app/api/search?q=${firstResponse.query.toString()}&max=3`;
+        const maxResults = firstResponse.max || 3;
+        const edgeUrl = `https://hadith-api-wine.vercel.app/api/search?q=${firstResponse.query.toString()}&max=${maxResults}`;
         console.log("Calling Edge Function:", edgeUrl);
 
         const response = await axios.get(edgeUrl);
@@ -535,7 +535,8 @@ async function sendMessage() {
     } else if (firstResponse.type === "hadith_search") {
       try {
         // Call Edge Function untuk hadith book search
-        let edgeUrl = `https://hadith-api-wine.vercel.app/api/search?q=${encodeURIComponent(firstResponse.query)}&max=3`;
+        const maxResults = firstResponse.max || 3;
+        let edgeUrl = `https://hadith-api-wine.vercel.app/api/search?q=${encodeURIComponent(firstResponse.query)}&max=${maxResults}`;
 
         // Tambahkan parameter book jika ada
         if (firstResponse.book && firstResponse.book.length > 0) {
