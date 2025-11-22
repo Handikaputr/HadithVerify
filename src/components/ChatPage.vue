@@ -220,7 +220,7 @@ Sunan an-Nasa'i
       {
         "type": "hadith_query",
         "query": "kata kunci atau teks hadits yang dicari",
-        "max"=1, //jika berkaitan verifikasi shahih atau tidaknya, selain itu hapus properti ini
+        "max":1, //jika berkaitan verifikasi shahih atau tidaknya, selain itu hapus properti ini
         "book": [jika user meminta hadist dari kitab tertentu - format penulisan kitab seperti nomor 2 - jika banyak dipisah dengan ","]
         "answer": {
           "succes": [jawaban ketika hadist ditemukan, jika betarnya shahih atau tidaknya - ['hadist ini memiliki derajat yang tinggi' (jangan secara langsung menyebut shahih)],)],
@@ -319,7 +319,7 @@ Sunan an-Nasa'i
       {
         "type": "hadith_query",
         "query": "kata kunci atau teks hadits yang dicari",
-        "max"=1, //jika berkaitan verifikasi shahih atau tidaknya, selain itu hapus properti ini
+        "max":1, //jika berkaitan verifikasi shahih atau tidaknya, selain itu hapus properti ini
         "book": [jika user meminta hadist dari kitab tertentu - format penulisan kitab seperti nomor 2 - jika banyak dipisah dengan ","]
         "answer": {
           "succes": [jawaban ketika hadist ditemukan, jika betarnya shahih atau tidaknya - ['hadist ini memiliki derajat yang tinggi' (jangan secara langsung menyebut shahih)],)],
@@ -443,9 +443,9 @@ async function sendMessage() {
     if (firstResponse.type === "hadith_query") {
       try {
         // Call Vercel Edge Function instead of direct API
-        const max = firstResponse.max || 3;        
-        
-          let edgeUrl = `https://hadith-api-wine.vercel.app/api/search?q=${encodeURIComponent(firstResponse.query)}&max=${max}`;
+        const max = firstResponse.max || 3;
+
+        let edgeUrl = `https://hadith-api-wine.vercel.app/api/search?q=${encodeURIComponent(firstResponse.query)}&max=${max}`;
 
         // Tambahkan parameter book jika ada
         if (firstResponse.book && firstResponse.book.length > 0) {
@@ -550,7 +550,7 @@ async function sendMessage() {
         console.log("Hadith Search Response:", response);
         const data = response.data;
 
-        if (data) {
+        if (data != null) {
           // Format sama seperti hadith_query
           const status = getHadithStatus(data.book);
           const hadithList = [data].map((h, i) =>
@@ -570,12 +570,63 @@ async function sendMessage() {
           // Format plain text untuk AI context
           const plainTextForAI = `hadist: ${data.book} (${data.number})\nArab: ${data.arab}\nIndonesia: ${data.indonesia}`;
 
-          chatData.value.push({
-            "role": "assistant",
-            "content": "Berikut adalah hadits yang Anda cari:\n\n" + plainTextForAI
-          });
+          // Jika reason true, kirim data ke AI untuk respons tambahan
+          if (firstResponse.reason === true) {
+            chatData.value.push({
+              "role": "assistant",
+              "content": plainTextForAI
+            });
 
-          finalResponse = "Berikut adalah hadits yang Anda cari:\n\n" + hadithList;
+            // Tambahkan prompt untuk AI agar merespons sesuai pertanyaan user
+            chatData.value.push({
+              "role": "user",
+              "content": "Berdasarkan hadits di atas, berikan kelanjutan jawaban sesuai pertanyaan saya sebelumnya. Jawab dengan singkat dan jelas."
+            });
+
+            // Panggil AI lagi untuk mendapat respons tambahan
+            const secondCompletion = await groq.chat.completions.create({
+              "messages": chatData.value,
+              "model": "llama-3.1-8b-instant",
+              "temperature": 0.7,
+              "max_completion_tokens": 1000,
+              "top_p": 1,
+              "stream": false,
+              "stop": null
+            });
+
+            let aiResponseText = secondCompletion.choices[0].message.content;
+            console.log("Second AI Response (raw):", aiResponseText);
+
+            // Parse AI response - bisa JSON atau plain text
+            let explanationText;
+            try {
+              const aiResponse = JSON.parse(aiResponseText);
+              // Coba ambil dari berbagai struktur JSON
+              explanationText = aiResponse.answer?.success || aiResponse.message || aiResponseText;
+              // Jika array, join dengan newline
+              if (Array.isArray(explanationText)) {
+                explanationText = explanationText.join('\n');
+              }
+            } catch (parseError) {
+              console.warn("AI response is not JSON, using plain text:", parseError);
+              explanationText = aiResponseText;
+            }
+
+            chatData.value.push({
+              "role": "assistant",
+              "content": explanationText
+            });
+
+            finalResponse = hadithList + `<div class="mt-4 p-3 rounded-lg text-sm" style="background-color: var(--explanation-bg, rgba(243, 244, 246, 1)); color: var(--explanation-text, rgba(31, 41, 55, 1)); border: 1px solid var(--explanation-border, rgba(229, 231, 235, 1));">${explanationText}</div>`;
+          } else {
+            // Jika reason false, hanya tampilkan hadits
+            chatData.value.push({
+              "role": "assistant",
+              "content": "Berikut adalah hadits yang Anda cari:\n\n" + plainTextForAI
+            });
+
+            finalResponse = "Berikut adalah hadits yang Anda cari:\n\n" + hadithList;
+          }
         } else if (response.status === 404) {
           finalResponse = "Maaf, saya tidak dapat menemukan hadits yang sesuai ";
         } else {
