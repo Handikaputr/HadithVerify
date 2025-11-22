@@ -602,7 +602,7 @@ async function sendMessage() {
               "content": aiResponse.answer.success
             });
 
-            finalResponse = hadithList + `\n\n<div class="mt-4 p-3 bg-gray-50 rounded-lg text-sm">${aiResponse.answer.success}</div>`;
+            finalResponse = hadithList + `<div class="mt-4 p-3 rounded-lg text-sm" style="background-color: var(--explanation-bg, rgba(243, 244, 246, 1)); color: var(--explanation-text, rgba(31, 41, 55, 1)); border: 1px solid var(--explanation-border, rgba(229, 231, 235, 1));">${aiResponse.answer.success}</div>`;
           } else {
             // Jika reason false, hanya tampilkan hadits
             chatData.value.push({
@@ -670,6 +670,19 @@ function scrollToBottom() {
 </script>
 
 <style scoped>
+/* CSS Variables for theme */
+:root {
+  --explanation-bg: rgba(243, 244, 246, 1);
+  --explanation-text: rgba(31, 41, 55, 1);
+  --explanation-border: rgba(229, 231, 235, 1);
+}
+
+.bg-slate-900 {
+  --explanation-bg: rgba(30, 41, 59, 0.8);
+  --explanation-text: rgba(243, 244, 246, 1);
+  --explanation-border: rgba(71, 85, 105, 0.5);
+}
+
 @keyframes messageSlide {
   from {
     opacity: 0;
