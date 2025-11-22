@@ -595,14 +595,25 @@ async function sendMessage() {
               "stop": null
             });
 
-            const aiResponse = JSON.parse(secondCompletion.choices[0].message.content);
+            let aiResponseText = secondCompletion.choices[0].message.content;
+            console.log("Second AI Response (raw):", aiResponseText);
+
+            // Coba parse sebagai JSON, jika gagal gunakan sebagai plain text
+            let explanationText;
+            try {
+              const aiResponse = JSON.parse(aiResponseText);
+              explanationText = aiResponse.answer?.success || aiResponse.message ;
+            } catch (parseError) {
+              console.warn("Failed to parse AI response as JSON, using plain text:", parseError);
+              explanationText = aiResponseText;
+            }
 
             chatData.value.push({
               "role": "assistant",
-              "content": aiResponse.answer.success
+              "content": explanationText
             });
 
-            finalResponse = hadithList + `<div class="mt-4 p-3 rounded-lg text-sm" style="background-color: var(--explanation-bg, rgba(243, 244, 246, 1)); color: var(--explanation-text, rgba(31, 41, 55, 1)); border: 1px solid var(--explanation-border, rgba(229, 231, 235, 1));">${aiResponse.answer.success}</div>`;
+            finalResponse = hadithList + `<div class="mt-4 p-3 rounded-lg text-sm" style="background-color: var(--explanation-bg, rgba(243, 244, 246, 1)); color: var(--explanation-text, rgba(31, 41, 55, 1)); border: 1px solid var(--explanation-border, rgba(229, 231, 235, 1));">${explanationText}</div>`;
           } else {
             // Jika reason false, hanya tampilkan hadits
             chatData.value.push({
