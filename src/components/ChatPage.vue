@@ -602,7 +602,7 @@ async function sendMessage() {
             let explanationText;
             try {
               const aiResponse = JSON.parse(aiResponseText);
-              explanationText = aiResponse.answer?.success || aiResponse.message ;
+              explanationText = aiResponse.answer?.success || aiResponse.message || aiResponseText;
             } catch (parseError) {
               console.warn("Failed to parse AI response as JSON, using plain text:", parseError);
               explanationText = aiResponseText;
