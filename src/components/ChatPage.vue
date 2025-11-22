@@ -443,10 +443,9 @@ async function sendMessage() {
     if (firstResponse.type === "hadith_query") {
       try {
         // Call Vercel Edge Function instead of direct API
-        const query = new URLSearchParams();
-
+        const max = firstResponse.max || 3;        
         
-          let edgeUrl = `https://hadith-api-wine.vercel.app/api/search?q=${encodeURIComponent(firstResponse.query)}&max=3`;
+          let edgeUrl = `https://hadith-api-wine.vercel.app/api/search?q=${encodeURIComponent(firstResponse.query)}&max=${max}`;
 
         // Tambahkan parameter book jika ada
         if (firstResponse.book && firstResponse.book.length > 0) {
