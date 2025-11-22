@@ -207,21 +207,22 @@ Sunan an-Nasa'i
       {
         "type": "hadith_search",
         "book": "kitab",
-        "chapter": "nomor"
+        "chapter": "nomor",
+        "reason": false // jika user meminta penjelasan atau kamu perlu memberikan respon setelah data hadist tersedia maka beri nilai true
       }
 
 3) HADITH_QUERY - User mencari hadits berdasarkan kata kunci
    Trigger: 
       - Ada kata kunci: "hadits", "hadith", "verifikasi", "cari hadits", "carikan hadits"
       - Atau user memberikan teks hadits (dalam bahasa Arab atau Indonesia)
-      - user menyebutkan hadist untuk verifikasi shahih atau tidaknya -> [seluruh text indonesia/arab nya atau kalimat pertama jika banyak [potongan murni tanpa imbuhan apapun seperti ... ]]
-    
+      - user menyebutkan hadist untuk verifikasi shahih atau tidaknya -> [seluruh text indonesia/arabnya atau kalimat pertama jika banyak [potongan murni tanpa imbuhan apapun seperti ... ]]
    Output: 
       {
         "type": "hadith_query",
         "query": "kata kunci atau teks hadits yang dicari",
+        "book": [jika user meminta hadist dari kitab tertentu - format penulisan kitab seperti nomor 2 - jika banyak dipisah dengan ","]
         "answer": {
-          "succes": [jawaban ketika hadist ditemukan],
+          "succes": [jawaban ketika hadist ditemukan, jika betarnya shahih atau tidaknya - ['hadist ini memiliki derajat yang tinggi' (jangan secara langsung menyebut shahih)],)],
           "failed": [jawaban ketika hadist tidak ditemukan - ['Maaf, saya tidak menemukan hadits yang spesifik menyebutkan ...' , 'Maaf, saya tidak menemukan hadits yang sesuai dengan teks yang Anda berikan di 6 kitab induk hadits (Kutubus Sittah). Hadits ini tidak dapat kami verifikasi keasliannya atau belum pasti']]
         }
       }
@@ -243,7 +244,7 @@ CRITICAL RULES
 EXAMPLES
 =================================================================
 User: "hadits tentang membunuh manusia"
-Output: {"type": "hadith_query", "query": "membunuh manusia", "answer": {"success": ["Berikut adalah hadits yang menyebutkan tentang membunuh manusia: ..."], "failed": ["Maaf, saya tidak menemukan hadits yang spesifik menyebutkan tentang membunuh manusia."]}}
+Output: {"type": "hadith_query", "query": "membunuh manusia", "answer": {"success": ["Berikut adalah hadits yang menyebutkan tentang membunuh manusia: ..."], "failed": ["Maaf, saya tidak menemukan hadits yang spesifik menyebutkan tentang membunuh manusia dari 6 kitab induk hadits (Kutubus Sittah)."]}}
 
 User: "cari hadits sahih al - bukhari nomor 25"  
 Output: {"type": "hadith_search", "book": "Shahih al-Bukhari", "chapter": "25"} //chapter atau nomor
@@ -304,7 +305,8 @@ Sunan an-Nasa'i
       {
         "type": "hadith_search",
         "book": "kitab",
-        "chapter": "nomor"
+        "chapter": "nomor",
+        "reason": false // jika user meminta penjelasan atau kamu perlu memberikan respon setelah data hadist tersedia maka beri nilai true
       }
 
 3) HADITH_QUERY - User mencari hadits berdasarkan kata kunci
@@ -316,6 +318,7 @@ Sunan an-Nasa'i
       {
         "type": "hadith_query",
         "query": "kata kunci atau teks hadits yang dicari",
+        "book": [jika user meminta hadist dari kitab tertentu - format penulisan kitab seperti nomor 2 - jika banyak dipisah dengan ","]
         "answer": {
           "succes": [jawaban ketika hadist ditemukan, jika betarnya shahih atau tidaknya - ['hadist ini memiliki derajat yang tinggi' (jangan secara langsung menyebut shahih)],)],
           "failed": [jawaban ketika hadist tidak ditemukan - ['Maaf, saya tidak menemukan hadits yang spesifik menyebutkan ...' , 'Maaf, saya tidak menemukan hadits yang sesuai dengan teks yang Anda berikan di 6 kitab induk hadits (Kutubus Sittah). Hadits ini tidak dapat kami verifikasi keasliannya atau belum pasti']]
@@ -438,10 +441,16 @@ async function sendMessage() {
     if (firstResponse.type === "hadith_query") {
       try {
         // Call Vercel Edge Function instead of direct API
-        const query = new URLSearchParams();
+        let edgeUrl = `https://hadith-api-wine.vercel.app/api/search?q=${encodeURIComponent(firstResponse.query)}&max=3`;
 
+        // Tambahkan parameter book jika ada
+        if (firstResponse.book && firstResponse.book.length > 0) {
+          const bookParam = Array.isArray(firstResponse.book)
+            ? firstResponse.book.join(',')
+            : firstResponse.book;
+          edgeUrl += `&book=${encodeURIComponent(bookParam)}`;
+        }
 
-        const edgeUrl = `https://hadith-api-wine.vercel.app/api/search?q=${firstResponse.query.toString()}&max=3`;
         console.log("Calling Edge Function:", edgeUrl);
 
         const response = await axios.get(edgeUrl);
@@ -513,6 +522,7 @@ async function sendMessage() {
             "content": firstResponse.answer.success.join('\n') + '\n\n' + plainTextForAI
           });
 
+
           finalResponse = firstResponse.answer.success.join('\n') + '\n\n' + hadithList;
 
         } else {
@@ -559,12 +569,47 @@ async function sendMessage() {
           // Format plain text untuk AI context
           const plainTextForAI = `hadist: ${data.book} (${data.number})\nArab: ${data.arab}\nIndonesia: ${data.indonesia}`;
 
-          chatData.value.push({
-            "role": "assistant",
-            "content": "Berikut adalah hadits yang Anda cari:\n\n" + plainTextForAI
-          });
+          // Jika reason true, kirim data ke AI untuk respons tambahan
+          if (firstResponse.reason === true) {
+            chatData.value.push({
+              "role": "assistant",
+              "content": plainTextForAI
+            });
 
-          finalResponse = "Berikut adalah hadits yang Anda cari:\n\n" + hadithList;
+            // Tambahkan prompt untuk AI agar merespons sesuai pertanyaan user
+            chatData.value.push({
+              "role": "user",
+              "content": "Berdasarkan hadits di atas, berikan penjelasan sesuai pertanyaan saya sebelumnya. Jawab dengan singkat dan jelas."
+            });
+
+            // Panggil AI lagi untuk mendapat respons tambahan
+            const secondCompletion = await groq.chat.completions.create({
+              "messages": chatData.value,
+              "model": "llama-3.1-8b-instant",
+              "temperature": 0.7,
+              "max_completion_tokens": 1000,
+              "top_p": 1,
+              "stream": false,
+              "stop": null
+            });
+
+            const aiResponse = secondCompletion.choices[0].message.content;
+
+            chatData.value.push({
+              "role": "assistant",
+              "content": aiResponse
+            });
+
+            finalResponse = hadithList + `\n\n<div class="mt-4 p-3 bg-gray-50 rounded-lg text-sm">${aiResponse}</div>`;
+          } else {
+            // Jika reason false, hanya tampilkan hadits
+            chatData.value.push({
+              "role": "assistant",
+              "content": "Berikut adalah hadits yang Anda cari:\n\n" + plainTextForAI
+            });
+
+            finalResponse = "Berikut adalah hadits yang Anda cari:\n\n" + hadithList;
+          }
         } else if (response.status === 404) {
           finalResponse = "Maaf, saya tidak dapat menemukan hadits yang sesuai ";
         } else {
